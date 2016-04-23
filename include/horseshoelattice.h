@@ -1,0 +1,65 @@
+#ifndef HORSESHOEATTICE_H
+#define HORSESHOELATTICE_H
+
+#include <vector>
+#include <utility>
+
+#include "vec3d.h"
+#include "vortexcontainer.h"
+
+class HorseshoeLattice : public VortexContainer{
+    public: 
+        HorseshoeLattice();
+        HorseshoeLattice( int ni, int nj );
+        HorseshoeLattice( const HorseshoeLattice &vl );
+        ~HorseshoeLattice();
+
+        int ni();
+        int nj();
+       
+        bool hasTrailers();
+        Vec3D trailerVec();
+        
+        std::vector<std::vector<Vec3D>>& getEndPoints();
+        std::vector<std::vector<Vec3D>>& getControlPoints();
+        std::vector<std::vector<Vec3D>>& getControlPointNormals();
+        std::vector<std::vector<double>>& getGamma();
+        
+        virtual Vec3D calcInfluenceCoefficient( Vec3D p, int n);
+        virtual Vec3D calcInducedVelocity( Vec3D );
+        
+        void calcControlPointNormals(); 
+        
+        std::pair<int, int> ijFromN( int n );
+        int ijToN( int i, int j);
+        int maxN();
+        double dSpan(int i, int j);
+        Vec3D gammaVector(int i, int j);
+        Vec3D gammaCenterPoint(int i, int j);
+       
+        void centerControlPoints(); 
+        void flipTip( double dihedralBreak, double dihedral);  
+        void setHasTrailers( bool b );
+        void setTrailerVec( Vec3D v );
+        void snapToUnit(); 
+        void snapToAspectTaper( double ar, double taper ); 
+        void snapToAspectTaperSweep( double ar, double taper, double Sweep ); 
+        void printState();
+
+        void rotate( Vec3D point, Vec3D dir, double theta); 
+        void translate( Vec3D dir ); 
+        
+    private:
+        int ni_;
+        int nj_;
+        bool hasTrailers_;
+        Vec3D trailerVec_;
+
+        std::vector<std::vector<Vec3D>> endPoints;
+        std::vector<std::vector<Vec3D>> controlPoints;
+        std::vector<std::vector<Vec3D>> controlPointNormals;
+        std::vector<std::vector<double>> gamma;
+
+};
+
+#endif
