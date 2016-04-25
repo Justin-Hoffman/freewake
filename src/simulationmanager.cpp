@@ -45,6 +45,7 @@ void SimulationManager::solve(){
         for( int hi = 0; hi < (int) surfaces_.size(); hi++ ){
             LiftingSurface* si = surfaces_[hi];
             HorseshoeLattice& hli = si->getLattice();
+            #pragma omp parallel for
             for(int ii = 0; ii < si->nSpan(); ii++){
                 for(int ji = 0; ji < si->nChord(); ji++){
                     //For every control point from every lifting surface

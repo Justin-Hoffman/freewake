@@ -82,7 +82,7 @@ Vec3D HorseshoeLattice::calcInducedVelocity( Vec3D p){
     double vx = 0.0, vy = 0.0, vz = 0.0;
     double gammaSum, gammaLocal;
     aOut = Vec3D(0.0, 0.0, 0.0);
-//    #pragma omp parallel for private(gammaSum, gammaLocal, r1, r2) reduction(+:vx,vy,vz)
+    #pragma omp parallel for private(gammaSum, gammaLocal, r1, r2) reduction(+:vx,vy,vz)
     for ( int i = 0; i < ni_+1; i++){
         Vec3D aTmp = Vec3D(0.0, 0.0, 0.0);//Hackery because I can't use openMP reduce on a class
         gammaSum = 0.0;

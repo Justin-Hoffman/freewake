@@ -54,7 +54,8 @@ Vec3D VortexLattice::calcInfluenceCoefficient( Vec3D p, int n ){
 }
 
 Vec3D VortexLattice::calcInducedVelocity( Vec3D p){
-    Vec3D vOut = Vec3D(p);
+    Vec3D vOut = Vec3D();
+    
 
     return vOut;
 }
