@@ -70,34 +70,33 @@ TEST_F(HorseshoeLatticeTest, TestIJToN){
 }
 TEST_F(HorseshoeLatticeTest, TestSnapToArTaper){
     vl->snapToAspectTaper( 4.0/0.75, .5);
-
-    double x[5] =      {0.0,     1.0,     2.0,     3.0,     4.0};
-    double xcp[4] =    {0.5,     1.5,     2.5,     3.5};
-    double y[4] =      {0.0,     1.0/3.0, 2.0/3.0, 1.0};
-    double ycp[3] =    {3.0/12.0, 7.0/12.0, 11.0/12.0};
-    double yScale[5] = {8.0/8.0, 7.0/8.0, 6.0/8.0, 5.0/8.0, 4.0/8.0};
-    double yLe[5] =    {0.0, (1.0-7.0/8.0)/4.0, (1.0-6.0/8.0)/4.0, (1.0-5.0/8.0)/4.0, (1.0-4.0/8.0)/4.0};
+    double y[5] =      {0.0,     1.0,     2.0,     3.0,     4.0};
+    double ycp[4] =    {0.5,     1.5,     2.5,     3.5};
+    double x[4] =      {0.0,     -1.0/3.0, -2.0/3.0, -1.0};
+    double xcp[3] =    {-3.0/12.0, -7.0/12.0, -11.0/12.0};
+    double xScale[5] = {8.0/8.0, 7.0/8.0, 6.0/8.0, 5.0/8.0, 4.0/8.0};
+    double xLe[5] =    {0.0, -(1.0-7.0/8.0)/4.0, -(1.0-6.0/8.0)/4.0, -(1.0-5.0/8.0)/4.0, -(1.0-4.0/8.0)/4.0};
     for (int i = 0; i < vl->ni(); i++){
         for (int j = 0; j < vl->nj(); j++){
            //printf("%i, %i\n",i,j);
-           EXPECT_DOUBLE_EQ( x[i]                       , vl->getEndPoints()[i][j].x);
-           EXPECT_DOUBLE_EQ( y[j]*yScale[i]+yLe[i]-0.25 , vl->getEndPoints()[i][j].y);
+           EXPECT_DOUBLE_EQ( y[i]                       , vl->getEndPoints()[i][j].y);
+           EXPECT_DOUBLE_EQ( x[j]*xScale[i]+xLe[i]+0.25 , vl->getEndPoints()[i][j].x);
            
-           EXPECT_NEAR     ( xcp[i]                                                        , vl->getControlPoints()[i][j].x, 1E-15);
-           EXPECT_NEAR     ( ycp[j]*(yScale[i]+yScale[i+1])/2.0+(yLe[i]+yLe[i+1])/2.0-0.25 , vl->getControlPoints()[i][j].y, 1E-15);
+           EXPECT_NEAR     ( ycp[i]                                                        , vl->getControlPoints()[i][j].y, 1E-15);
+           EXPECT_NEAR     ( xcp[j]*(xScale[i]+xScale[i+1])/2.0+(xLe[i]+xLe[i+1])/2.0+0.25 , vl->getControlPoints()[i][j].x, 1E-15);
         }
-    }      
+    }     
 }
 
 TEST_F(HorseshoeLatticeTest, TestControlPoints){
     vl->snapToUnit();
-    double xcp[4] =    {1.0/8.0, 3.0/8.0, 5.0/8.0, 7.0/8.0};
-    double ycp[3] =    {3.0/12.0, 7.0/12.0, 11.0/12.0};
+    double ycp[4] =    {1.0/8.0, 3.0/8.0, 5.0/8.0, 7.0/8.0};
+    double xcp[3] =    {-3.0/12.0, -7.0/12.0, -11.0/12.0};
     for (int i = 0; i < vl->ni(); i++){
         for (int j = 0; j < vl->nj(); j++){
            //printf("%i, %i\n",i,j);
-           EXPECT_DOUBLE_EQ(xcp[i] , vl->getControlPoints()[i][j].x);
-           EXPECT_DOUBLE_EQ(ycp[j] , vl->getControlPoints()[i][j].y);
+           EXPECT_DOUBLE_EQ(ycp[i] , vl->getControlPoints()[i][j].y);
+           EXPECT_DOUBLE_EQ(xcp[j] , vl->getControlPoints()[i][j].x);
            EXPECT_DOUBLE_EQ(0.0    , vl->getControlPoints()[i][j].z);
         }
     }
@@ -114,12 +113,12 @@ TEST_F(HorseshoeLatticeTest, TestControlPointNormals){
         }
     }
     vl->snapToAspectTaper( 1.0, 1.0 );
-    vl->rotate( Vec3D( 0.0, 0.0, 0.0 ), Vec3D( 1.0, 0.0 , 0.0 ), 45.0 * M_PI / 180.0 ); 
+    vl->rotate( Vec3D( 0.0, 0.0, 0.0 ), Vec3D( 0.0, 1.0 , 0.0 ), 45.0 * M_PI / 180.0 ); 
     for (int i = 0; i < vl->ni(); i++){
         for (int j = 0; j < vl->nj(); j++){
            //printf("%i, %i\n",i,j);
-           EXPECT_DOUBLE_EQ( 0.0          , vl->getControlPointNormals()[i][j].x);
-           EXPECT_DOUBLE_EQ( sqrt(2.0)/2.0, vl->getControlPointNormals()[i][j].y);
+           EXPECT_DOUBLE_EQ(-sqrt(2.0)/2.0, vl->getControlPointNormals()[i][j].x);
+           EXPECT_DOUBLE_EQ( 0.0          , vl->getControlPointNormals()[i][j].y);
            EXPECT_DOUBLE_EQ(-sqrt(2.0)/2.0, vl->getControlPointNormals()[i][j].z);
         }
     }
@@ -164,9 +163,9 @@ TEST_F(HorseshoeLatticeTest, TestRotate){
 
     for (int i = 0; i < vl->ni(); i++){
         for (int j = 0; j < vl->nj(); j++){
-            EXPECT_DOUBLE_EQ(-vl->getControlPoints()[i][j].x, h2.getControlPoints()[i][j].x);
-            EXPECT_DOUBLE_EQ(-vl->getControlPoints()[i][j].y, h2.getControlPoints()[i][j].y);
-            EXPECT_DOUBLE_EQ(vl->getControlPoints()[i][j].z, h2.getControlPoints()[i][j].z);
+            EXPECT_NEAR( -vl->getControlPoints()[i][j].x, h2.getControlPoints()[i][j].x, 1E-15);
+            EXPECT_NEAR( -vl->getControlPoints()[i][j].y, h2.getControlPoints()[i][j].y, 1E-15);
+            EXPECT_NEAR(  vl->getControlPoints()[i][j].z, h2.getControlPoints()[i][j].z, 1E-15);
         }
     }
 }
@@ -179,9 +178,9 @@ TEST_F(HorseshoeLatticeTest, TestFlipTip){
         for (int j = 0; j < vl->nj()+1; j++){
             if (i > 2){
                 //X values rotate up to z;  
-                EXPECT_DOUBLE_EQ( vl->getEndPoints()[i][j].x-0.5, h2.getEndPoints()[i][j].z );
+                EXPECT_DOUBLE_EQ( vl->getEndPoints()[i][j].y-0.5, h2.getEndPoints()[i][j].z );
                 //y values untouched 
-                EXPECT_DOUBLE_EQ( vl->getEndPoints()[i][j].y, h2.getEndPoints()[i][j].y );
+                EXPECT_DOUBLE_EQ( vl->getEndPoints()[i][j].x, h2.getEndPoints()[i][j].x );
             }
         }
     }
@@ -192,11 +191,11 @@ TEST_F(HorseshoeLatticeTest, TestInfluenceCoefficient){
     hl.snapToUnit();
     Vec3D a = hl.calcInfluenceCoefficient( hl.getControlPoints()[0][0] , 0 ); // Self induced coefficient without trailers
     
-    Vec3D ra = Vec3D( 0.0, 1.0 , 0.0 );
-    Vec3D rb = Vec3D( 0.0, 0.25, 0.0 );
-    Vec3D rc = Vec3D( 1.0, 0.25, 0.0 );
-    Vec3D rd = Vec3D( 1.0, 1.0 , 0.0 );
-    Vec3D p  = Vec3D( 0.5, 0.75, 0.0 );
+    Vec3D ra = Vec3D( -1.0 , 0.0 , 0.0 );
+    Vec3D rb = Vec3D( -0.25, 0.0 , 0.0 );
+    Vec3D rc = Vec3D( -0.25, 1.0 , 0.0 );
+    Vec3D rd = Vec3D( -1.0 , 1.0 , 0.0 );
+    Vec3D p  = Vec3D( -0.75, 0.5 , 0.0 );
 
     double rcore = 1E-6;
     Vec3D aReal = Vec3D( 0.0, 0.0, 0.0 );

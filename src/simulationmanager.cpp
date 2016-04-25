@@ -112,7 +112,7 @@ void SimulationManager::solve(){
         }
         integrateForceAndMoment();
         double Cl =  fomo_.aeroForceCoeff.z;
-        double Cd =  fomo_.aeroForceCoeff.y;
+        double Cd =  fomo_.aeroForceCoeff.x;
         double CdIdeal = Cl*Cl/ (M_PI * refSurf_.S );
         printf("The net lift was found to be %8.8f\n", netLift() );
         printf("The net lift was found to be %8.8f  by direct integration\n", netLiftDirect() );
@@ -195,9 +195,9 @@ void SimulationManager::integrateForceAndMoment(){
     fomo_.bodyMomentCoeff = netForce/(1.0/2.0 * refV_ * refV_ * refSurf_.S );
     Vec3D uX = Vec3D(1.0, 0.0, 0.0);
     Vec3D uV = globalLinearVelocity_.norm();
-    Vec3D uL = uV.rotate( Vec3D(), Vec3D(1.0, 0.0, 0.0), -M_PI / 2.0 );
+    Vec3D uL = uV.rotate( Vec3D(), Vec3D(0.0, 1.0, 0.0), -M_PI / 2.0 );
     Vec3D binormal = uV.cross( uL );
-    fomo_.aeroForce = Vec3D( fomo_.bodyForce.dot(binormal), fomo_.bodyForce.dot(uV), fomo_.bodyForce.dot(uL) );
+    fomo_.aeroForce = Vec3D( fomo_.bodyForce.dot(uV), fomo_.bodyForce.dot(binormal), fomo_.bodyForce.dot(uL) );
     fomo_.aeroForceCoeff = fomo_.aeroForce /  (1.0/2.0 * refV_ * refV_ * refSurf_.S );
 }
 

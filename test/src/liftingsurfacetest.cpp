@@ -28,16 +28,16 @@ TEST_F(LiftingSurfaceTest, TestUpdateLattice){
     ls->updateLattice();    
     HorseshoeLattice& hl = ls->getLattice();
     
-    double x[5] =      {0.0,     1.0,     2.0,     3.0,     4.0};
-    double y[4] =      {0.0,     1.0/3.0, 2.0/3.0, 1.0};
-    double yScale[5] = {8.0/8.0, 7.0/8.0, 6.0/8.0, 5.0/8.0, 4.0/8.0};
-    double yLe[5] =    {0.0, (1.0-7.0/8.0)/4.0, (1.0-6.0/8.0)/4.0, (1.0-5.0/8.0)/4.0, (1.0-4.0/8.0)/4.0};
+    double y[5] =      {0.0,     1.0    ,  2.0    ,  3.0,     4.0};
+    double x[4] =      {0.0,    -1.0/3.0, -2.0/3.0, -1.0};
+    double xScale[5] = {8.0/8.0, 7.0/8.0, 6.0/8.0, 5.0/8.0, 4.0/8.0};
+    double xLe[5] =    {0.0, -(1.0-7.0/8.0)/4.0, -(1.0-6.0/8.0)/4.0, -(1.0-5.0/8.0)/4.0, -(1.0-4.0/8.0)/4.0};
 
     for (int i = 0; i < hl.ni(); i++){
         for (int j = 0; j < hl.nj(); j++){
            //printf("%i, %i\n",i,j);
-           EXPECT_NEAR     (x[i]                      , hl.getEndPoints()[i][j].x, 2E-15 );
-           EXPECT_NEAR     (y[j]*yScale[i]+yLe[i]-0.25, hl.getEndPoints()[i][j].y, 2E-15 );
+           EXPECT_NEAR     (y[i]                      , hl.getEndPoints()[i][j].y, 2E-15 );
+           EXPECT_NEAR     (x[j]*xScale[i]+xLe[i]+0.25, hl.getEndPoints()[i][j].x, 2E-15 );
         }
     }
 }

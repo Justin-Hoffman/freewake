@@ -70,4 +70,4 @@ check:
 	./test/allTests
 
 clean:
-	rm -rf ./src/*o 6DOFC sixDOFC libsixdof.so ./obj/*.o ./test/allTests
+	rm -rf ./src/*o freewake ./obj/*.o ./test/allTests

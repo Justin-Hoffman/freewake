@@ -130,17 +130,17 @@ Vec3D HorseshoeLattice::calcInducedVelocity( Vec3D p){
 }
 
 void HorseshoeLattice::snapToUnit(){
-    Vec3D dx = Vec3D(1.0/(double)( ni_ ), 0.0                , 0.0);
-    Vec3D dy = Vec3D(0.0                , 1.0/(double)( nj_ ), 0.0);
+    Vec3D dy = Vec3D(0.0                , 1.0/(double)( ni_ ), 0.0);
+    Vec3D dx = Vec3D(-1.0/(double)( nj_ ), 0.0                , 0.0);
     
     for (int i = 0; i < ni_+1; i++){
         if (i > 0){
-            endPoints[i][0] = endPoints[i-1][0] + dx;
+            endPoints[i][0] = endPoints[i-1][0] + dy;
         } else {
             endPoints[i][0] = Vec3D(0.0, 0.0, 0.0);
         }   
         for (int j = 1; j < nj_+1; j++){
-           endPoints[i][j] = endPoints[i][j-1] + dy;
+           endPoints[i][j] = endPoints[i][j-1] + dx;
         }
     }
     centerControlPoints();
@@ -152,21 +152,21 @@ void HorseshoeLattice::snapToAspectTaper( double ar, double taper ){
 
 void HorseshoeLattice::snapToAspectTaperSweep( double ar, double taper, double sweep ){
     double cr = 1.0, ct = cr*taper, cbar = (cr+ct)/2.0, b = ar*cbar, cLocal; //s = b*cbar
-    Vec3D dx = Vec3D(b/(double)( ni_ ), 0.0                , 0.0);
-    Vec3D dy = Vec3D(0.0                , cr/(double)( nj_ ), 0.0);
-    double yLe;
+    Vec3D dy = Vec3D( 0.0                , b/(double)( ni_ ), 0.0);
+    Vec3D dx = Vec3D(-1.0/(double)( nj_ ), 0.0              , 0.0);
+    double xLe;
     for (int i = 0; i < ni_+1; i++){
         if (i > 0){
-            endPoints[i][0] = endPoints[i-1][0] + dx;
+            endPoints[i][0] = endPoints[i-1][0] + dy;
         } else {
             endPoints[i][0] = Vec3D(0.0, 0.0, 0.0);
         }
-        cLocal = cr - (cr-ct)*endPoints[i][0].x/b;
-        yLe = -cLocal/4.0 + endPoints[i][0].x*tan(sweep);
-        dy.y = cLocal/(double)( nj_ );
-        endPoints[i][0].y = yLe;
+        cLocal = cr - (cr-ct)*endPoints[i][0].y/b;
+        xLe =  cLocal/4.0 - endPoints[i][0].y*tan(sweep);
+        dx.x = -cLocal/(double)( nj_ );
+        endPoints[i][0].x = xLe;
         for (int j = 1; j < nj_+1; j++){
-           endPoints[i][j] = endPoints[i][j-1] + dy;
+           endPoints[i][j] = endPoints[i][j-1] + dx;
         }
     }
     centerControlPoints();
