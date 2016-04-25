@@ -111,20 +111,6 @@ void SimulationManager::solve(){
             }
         }
         integrateForceAndMoment();
-        double Cl =  fomo_.aeroForceCoeff.z;
-        double Cd =  fomo_.aeroForceCoeff.x;
-        double CdIdeal = Cl*Cl/ (M_PI * refSurf_.S );
-        printf("The net lift was found to be %8.8f\n", netLift() );
-        printf("The net lift was found to be %8.8f  by direct integration\n", netLiftDirect() );
-        printf("Cl was found to be %8.8f\n", Cl );
-        printf("The net drag was found to be %8.8f\n", netDrag() );
-        printf("Cd was found to be %8.8f\n", Cd );
-        printf("Cd ideal is %8.8f\n", CdIdeal );
-        printf("Oswald efficient factor of %8.8f\n", CdIdeal/Cd );
-        printf("forces\n");
-        fomo_.bodyForce.printState();
-        fomo_.aeroForce.printState();
-        fomo_.aeroForceCoeff.printState();
         free(a); free(b);
     }
 }
@@ -253,4 +239,19 @@ std::tuple<int, int, int> SimulationManager::hijFromN( int n ){
     return std::make_tuple(n, ij.first, ij.second); 
 }
 
-
+void SimulationManager::printState(){
+    double Cl =  fomo_.aeroForceCoeff.z;
+    double Cd =  fomo_.aeroForceCoeff.x;
+    double CdIdeal = Cl*Cl/ (M_PI * refSurf_.S );
+    printf("The net lift was found to be %8.8f\n", netLift() );
+    printf("The net lift was found to be %8.8f  by direct integration\n", netLiftDirect() );
+    printf("Cl was found to be %8.8f\n", Cl );
+    printf("The net drag was found to be %8.8f\n", netDrag() );
+    printf("Cd was found to be %8.8f\n", Cd );
+    printf("Cd ideal is %8.8f\n", CdIdeal );
+    printf("Oswald efficient factor of %8.8f\n", CdIdeal/Cd );
+    printf("forces\n");
+    fomo_.bodyForce.printState();
+    fomo_.aeroForce.printState();
+    fomo_.aeroForceCoeff.printState();
+}

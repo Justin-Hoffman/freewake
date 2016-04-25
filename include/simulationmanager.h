@@ -32,6 +32,8 @@ class SimulationManager {
         void setReferenceSurface( ReferenceSurface );
         void setReferenceVelocity( double );
         void integrateForceAndMoment();
+        void printState();
+
         Vec3D netMoment(); 
         Vec3D netForce();
         ForcesAndMoments forcesAndMoments();

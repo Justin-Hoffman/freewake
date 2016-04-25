@@ -31,8 +31,8 @@ class VortexLattice : public VortexContainer{
         int ni_;
         int nj_;
 
-        std::vector<std::vector<Vec3D>> endPoints;
-
+        std::vector<std::vector<Vec3D>> endPoints_;
+        std::vector<std::vector<Vec3D>> endPointV_;
         std::vector<std::vector<double>> gammaI;
         std::vector<std::vector<double>> gammaJ;
 
