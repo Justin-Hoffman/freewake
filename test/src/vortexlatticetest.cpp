@@ -22,18 +22,18 @@ TEST_F(VortexLatticeTest, TestCopy){
 }
 
 TEST_F(VortexLatticeTest, TestEndPointsArraySize){
-    EXPECT_EQ( 6, vl->getEndPoints().size() );
-    EXPECT_EQ( 3, vl->getEndPoints()[0].size() );
+    EXPECT_EQ( 6, vl->endPoints().size() );
+    EXPECT_EQ( 3, vl->endPoints()[0].size() );
 }
 
 TEST_F(VortexLatticeTest, TestGammaIArraySize){
-    EXPECT_EQ( 5, vl->getGammaI().size() );
-    EXPECT_EQ( 3, vl->getGammaI()[0].size() );
+    EXPECT_EQ( 5, vl->gammaI().size() );
+    EXPECT_EQ( 3, vl->gammaI()[0].size() );
 }
 
 TEST_F(VortexLatticeTest, TestGammaJArraySize){
-    EXPECT_EQ( 6, vl->getGammaJ().size() );
-    EXPECT_EQ( 2, vl->getGammaJ()[0].size() );
+    EXPECT_EQ( 6, vl->gammaJ().size() );
+    EXPECT_EQ( 2, vl->gammaJ()[0].size() );
 }
 
 TEST_F(VortexLatticeTest, TestIJFromN){ 
