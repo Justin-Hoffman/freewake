@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <vec3d.h>
-#include "mkl_lapacke.h"
+#include "lapacke.h"
 
-extern void printMatrix( char const* desc, MKL_INT m, MKL_INT n, double* a, MKL_INT lda );
-extern void print_int_vector( char const* desc, MKL_INT n, MKL_INT* a );
+extern void printMatrix( char const* desc, int m, int n, double* a, int lda );
+extern void print_int_vector( char const* desc, int n, int* a );
 
 #define N 5
 #define NRHS 3
@@ -16,9 +16,9 @@ extern void print_int_vector( char const* desc, MKL_INT n, MKL_INT* a );
 /* Main program */
 int main() {
         /* Locals */
-        MKL_INT n = 5, nrhs = 1, lda = n, ldb = nrhs, info;
+        int n = 5, nrhs = 1, lda = n, ldb = nrhs, info;
         /* Local arrays */
-        MKL_INT ipiv[N];
+        int ipiv[N];
         double a[LDA*N] = {
             6.80, -6.05, -0.45,  8.32, -9.67,
            -2.11, -3.30,  2.58,  2.71, -5.14,

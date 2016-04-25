@@ -3,7 +3,7 @@
 #include "vortexmath.h"
 #include "stdio.h"
 
-HorseshoeLattice::HorseshoeLattice() : ni_( 1 ), nj_( 1 ), hasTrailers_( false ), trailerVec_( 0.0, 0.0, 0.0 ), 
+HorseshoeLattice::HorseshoeLattice() : rc_(1E-6), ni_( 1 ), nj_( 1 ), hasTrailers_( false ), trailerVec_( 0.0, 0.0, 0.0 ), 
                                  endPoints( 2, std::vector<Vec3D>( 2, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  controlPoints( 1, std::vector<Vec3D>( 1, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  controlPointNormals( 1, std::vector<Vec3D>( 1, Vec3D(0.0, 0.0, 1.0) ) ), 
@@ -12,7 +12,7 @@ HorseshoeLattice::HorseshoeLattice() : ni_( 1 ), nj_( 1 ), hasTrailers_( false )
 }
 
 HorseshoeLattice::HorseshoeLattice( int ni, int nj ) : 
-                                 ni_( ni ), nj_( nj ), hasTrailers_( false ), trailerVec_( 0.0, 0.0, 0.0 ),
+                                 rc_(1E-6), ni_( ni ), nj_( nj ), hasTrailers_( false ), trailerVec_( 0.0, 0.0, 0.0 ),
                                  endPoints( ni+1, std::vector<Vec3D>( nj+1, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  controlPoints( ni, std::vector<Vec3D>( nj, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  controlPointNormals( ni, std::vector<Vec3D>( nj, Vec3D(0.0, 0.0, 1.0) ) ), 
@@ -21,7 +21,7 @@ HorseshoeLattice::HorseshoeLattice( int ni, int nj ) :
 }
 
 HorseshoeLattice::HorseshoeLattice( const HorseshoeLattice &v ) : 
-                                 ni_( v.ni_ ), nj_( v.nj_ ), hasTrailers_( v.hasTrailers_ ),  trailerVec_(v.trailerVec_),
+                                 rc_(v.rc_),ni_( v.ni_ ), nj_( v.nj_ ), hasTrailers_( v.hasTrailers_ ),  trailerVec_(v.trailerVec_),
                                  endPoints( v.endPoints ),
                                  controlPoints( v.controlPoints ),
                                  controlPointNormals( v.controlPointNormals ),
@@ -44,35 +44,35 @@ Vec3D HorseshoeLattice::calcInfluenceCoefficient( Vec3D p, int n ){
         if ( j == jstar + 1) { //We're at the panel belonging to the vortex, only use 3/4 of the edge
             r1 = endPoints[i][j]  -p;
             r2 = (3.0*endPoints[i][j-1]  + 1.0*endPoints[i][j] )/4.0 - p;
-            aOut += BiotSavart(r1, r2, 0.0);
+            aOut += BiotSavart(r1, r2, rc_);
         
             r1 = (3.0*endPoints[i+1][j-1] + 1.0*endPoints[i+1][j])/4.0 - p;
             r2 = endPoints[i+1][j]   - p;
-            aOut += BiotSavart(r1, r2, 0.0);
+            aOut += BiotSavart(r1, r2, rc_);
 
         } else {
             r1 = endPoints[i][j]  -p;
             r2 = endPoints[i][j-1]-p;
-            aOut += BiotSavart(r1, r2, 0.0);
+            aOut += BiotSavart(r1, r2, rc_);
         
             r1 = endPoints[i+1][j-1] - p;
             r2 = endPoints[i+1][j]   - p;
-            aOut += BiotSavart(r1, r2, 0.0);
+            aOut += BiotSavart(r1, r2, rc_);
         }
     }
     if (hasTrailers_){
         r1 = endPoints[i][nj_] + trailerVec_ -p;
         r2 = endPoints[i][nj_]               -p;
-        aOut += BiotSavart(r1, r2, 0.0);
+        aOut += BiotSavart(r1, r2, rc_);
         r1 = endPoints[i+1][nj_]               -p;
         r2 = endPoints[i+1][nj_] + trailerVec_ -p;
-        aOut += BiotSavart(r1, r2, 0.0); 
+        aOut += BiotSavart(r1, r2, rc_); 
     }
     
     //Influence of single spanwise filament
     r1 = (3.0*endPoints[i][jstar]   + 1.0*endPoints[i][jstar+1])/4.0   - p;
     r2 = (3.0*endPoints[i+1][jstar] + 1.0*endPoints[i+1][jstar+1])/4.0   - p;
-    aOut += BiotSavart(r1, r2, 0.0);
+    aOut += BiotSavart(r1, r2, rc_);
     
     return aOut;
 }
@@ -94,7 +94,7 @@ Vec3D HorseshoeLattice::calcInducedVelocity( Vec3D p){
                 //horseshoe segmant across quarter panel
                 r1 = (3.0*endPoints[i  ][j] + 1.0*endPoints[i  ][j+1])/4.0  - p;
                 r2 = (3.0*endPoints[i+1][j] + 1.0*endPoints[i+1][j+1])/4.0  - p;
-                aTmp += BiotSavart(r1, r2, 0.0)*gamma[i][j];
+                aTmp += BiotSavart(r1, r2, rc_)*gamma[i][j];
             }
             if (i > 0) {
                 gammaLocal -= gamma[i-1][j];
@@ -102,12 +102,12 @@ Vec3D HorseshoeLattice::calcInducedVelocity( Vec3D p){
             // Contribution of the partial horseshoe down panel edges segment
             r1 = endPoints[i][j+1] - p;
             r2 = (3.0*endPoints[i][j] + 1.0*endPoints[i][j+1])/4.0  - p;
-            aTmp += BiotSavart(r1, r2, 0.0)*gammaLocal;
+            aTmp += BiotSavart(r1, r2, rc_)*gammaLocal;
             
             //Contribution of complete edge filaments
             r1 = (endPoints[i][j+1] - p);
             r2 = (endPoints[i][j]   - p);
-            aTmp += BiotSavart(r1, r2, 0.0)*gammaSum;
+            aTmp += BiotSavart(r1, r2, rc_)*gammaSum;
             if ( i < ni_ ){
                 gammaSum   += gamma[i][j];
             }
@@ -118,7 +118,7 @@ Vec3D HorseshoeLattice::calcInducedVelocity( Vec3D p){
         if (hasTrailers_){
             r1 = endPoints[i][nj_] + trailerVec_ -p;
             r2 = endPoints[i][nj_]               -p;
-            aTmp += BiotSavart(r1, r2, 0.0) * gammaSum;
+            aTmp += BiotSavart(r1, r2, rc_) * gammaSum;
         }
         vx += aTmp.x;
         vy += aTmp.y;
@@ -254,6 +254,20 @@ void HorseshoeLattice::rotate( Vec3D point, Vec3D axis, double theta ){
             endPoints[i][j] = endPoints[i][j].rotate(point, axis, theta);
         }
     }
+}
+
+void HorseshoeLattice::scale( double sc ){
+    for (int i = 0; i < ni_; i++){
+        for (int j = 0; j < nj_; j++){
+            controlPoints[i][j] *= sc;
+        }
+    }
+    for (int i = 0; i < ni_+1; i++){
+        for (int j = 0; j < nj_+1; j++){
+            endPoints[i][j] *= sc;
+        }
+    }
+
 }
 
 void HorseshoeLattice::translate( Vec3D dir ){

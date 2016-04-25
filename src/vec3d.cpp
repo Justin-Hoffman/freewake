@@ -15,7 +15,11 @@ Vec3D::Vec3D( const Vec3D &v ) : x(v.x), y(v.y), z(v.z) {
 
 Vec3D::~Vec3D(){};
 
-double Vec3D::dot( const Vec3D &v) {
+double Vec3D::angle( const Vec3D &v ) const {
+    return acos( v.dot(*this)/(v.magnitude()*this->magnitude()) );
+}
+
+double Vec3D::dot( const Vec3D &v) const {
     Vec3D vOut = Vec3D();
     
     vOut.x = this->x*v.x;
@@ -25,7 +29,7 @@ double Vec3D::dot( const Vec3D &v) {
     return vOut.x+vOut.y+vOut.z;
 };
 
-Vec3D Vec3D::cross( const Vec3D &v) {
+Vec3D Vec3D::cross( const Vec3D &v) const {
     Vec3D vOut = Vec3D();
     
     vOut.x = this->y*v.z - this->z*v.y;
@@ -35,25 +39,25 @@ Vec3D Vec3D::cross( const Vec3D &v) {
     return vOut;
 };
 
-double Vec3D::magnitude(){
+double Vec3D::magnitude() const {
     return sqrt( this->x*this->x + this->y*this->y + this->z*this->z);
 };
 
-Vec3D Vec3D::norm() {
+Vec3D Vec3D::norm() const {
     Vec3D vOut = Vec3D(*this);
     double m = vOut.magnitude();
     
     return (vOut/m);
 };
 
-Vec3D Vec3D::rotate( Vec3D point, Vec3D dir, double theta ){
+Vec3D Vec3D::rotate( Vec3D point, Vec3D dir, double theta ) const {
     Vec3D vOut = Vec3D();
     Vec3D vRelP = *this - point;
     vRelP = vRelP*cos(theta) + dir.cross(vRelP)*sin(theta) + dir * ( dir.dot(vRelP) ) * ( 1.0 - cos(theta) );
     return (point + vRelP);
 }
 
-Vec3D Vec3D::operator*( double d ){
+Vec3D Vec3D::operator*( double d ) const {
     Vec3D vOut = Vec3D(*this);
     vOut.x *= d;
     vOut.y *= d;
@@ -62,7 +66,14 @@ Vec3D Vec3D::operator*( double d ){
     return vOut;
 };
 
-Vec3D Vec3D::operator/( double d ){
+Vec3D Vec3D::operator*=( double d ){
+    this->x *= d;
+    this->y *= d;
+    this->z *= d;
+    return *this;
+};
+
+Vec3D Vec3D::operator/( double d ) const {
     Vec3D vOut = Vec3D(*this);
     vOut.x /= d;
     vOut.y /= d;
@@ -71,7 +82,7 @@ Vec3D Vec3D::operator/( double d ){
     return vOut;
 };
 
-Vec3D operator*( double d, Vec3D v ){
+Vec3D operator*( double d, const Vec3D v ){
     Vec3D vOut = Vec3D(v);
     vOut.x *= d;
     vOut.y *= d;
@@ -79,7 +90,7 @@ Vec3D operator*( double d, Vec3D v ){
     return vOut;
 };
 
-Vec3D Vec3D::operator+( double d ){
+Vec3D Vec3D::operator+( double d ) const {
     Vec3D vOut = Vec3D(*this);
     vOut.x += d;
     vOut.y += d;
@@ -94,7 +105,7 @@ Vec3D Vec3D::operator+=( double d ){
     return *this;
 };
 
-Vec3D operator+( double d, Vec3D v ){
+Vec3D operator+( double d, const Vec3D v ) {
     Vec3D vOut = Vec3D(v);
     vOut.x += d;
     vOut.y += d;
@@ -102,7 +113,7 @@ Vec3D operator+( double d, Vec3D v ){
     return vOut;
 };
 
-Vec3D Vec3D::operator+( Vec3D v ){
+Vec3D Vec3D::operator+( Vec3D v ) const {
     Vec3D vOut = Vec3D(*this);
     vOut.x += v.x;
     vOut.y += v.y;
@@ -118,7 +129,7 @@ Vec3D Vec3D::operator+=( Vec3D v ){
 };
 
 
-Vec3D Vec3D::operator-( double d ){
+Vec3D Vec3D::operator-( double d ) const {
     Vec3D vOut = Vec3D(*this);
     vOut.x -= d;
     vOut.y -= d;
@@ -126,7 +137,7 @@ Vec3D Vec3D::operator-( double d ){
     return vOut;
 };
 
-Vec3D operator-( double d, Vec3D v ){
+Vec3D operator-( double d, const Vec3D v ){
     Vec3D vOut = Vec3D();
     vOut.x = d-v.x;
     vOut.y = d-v.y;
@@ -134,7 +145,7 @@ Vec3D operator-( double d, Vec3D v ){
     return vOut;
 };
 
-Vec3D Vec3D::operator-( Vec3D v ){
+Vec3D Vec3D::operator-( const Vec3D v ) const{
     Vec3D vOut = Vec3D(*this);
     vOut.x -= v.x;
     vOut.y -= v.y;
@@ -143,6 +154,6 @@ Vec3D Vec3D::operator-( Vec3D v ){
 };
 
 void Vec3D::printState(){
-    printf("[%7.7f %7.7f %7.7f]\n", this->x, this->y, this->z);
+    printf("[%15.15f %15.15f %15.15f]\n", this->x, this->y, this->z);
 }
 

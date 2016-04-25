@@ -47,9 +47,11 @@ class HorseshoeLattice : public VortexContainer{
         void printState();
 
         void rotate( Vec3D point, Vec3D dir, double theta); 
+        void scale( double scale ); 
         void translate( Vec3D dir ); 
         
     private:
+        double rc_;
         int ni_;
         int nj_;
         bool hasTrailers_;

@@ -198,14 +198,15 @@ TEST_F(HorseshoeLatticeTest, TestInfluenceCoefficient){
     Vec3D rd = Vec3D( 1.0, 1.0 , 0.0 );
     Vec3D p  = Vec3D( 0.5, 0.75, 0.0 );
 
+    double rcore = 1E-6;
     Vec3D aReal = Vec3D( 0.0, 0.0, 0.0 );
-    Vec3D r1, r2; 
+    Vec3D r1, r2;
     r1 = ra-p; r2 = rb-p; 
-    aReal += BiotSavart( r1, r2, 0.0);
+    aReal += BiotSavart( r1, r2, rcore);
     r1 = rb-p; r2 = rc-p; 
-    aReal += BiotSavart( r1, r2, 0.0);
+    aReal += BiotSavart( r1, r2, rcore);
     r1 = rc-p; r2 = rd-p; 
-    aReal += BiotSavart( r1, r2, 0.0);
+    aReal += BiotSavart( r1, r2, rcore);
 
     EXPECT_DOUBLE_EQ( aReal.x, a.x );
     EXPECT_DOUBLE_EQ( aReal.y, a.y );
@@ -233,7 +234,7 @@ TEST_F(HorseshoeLatticeTest, TestBertinCummingsExampleInfluence){
     hl.setTrailerVec( Vec3D(0.0, 1000.0, 0.0) );
     a = hl.calcInfluenceCoefficient( hl.getControlPoints()[0][0] , 0 ); // Self induced coefficient with trailers
     double influence = hl.getControlPointNormals()[0][0].dot( a );
-    EXPECT_DOUBLE_EQ( -1.1382551251610777, influence );
+    EXPECT_NEAR( -1.1382551251610777, influence, 1E-12 );
    
     Vec3D rb = Vec3D( 0.0   , 0.0   , 0.0 );
     Vec3D ra = Vec3D( 0.0   , 1.0   , 0.0 );

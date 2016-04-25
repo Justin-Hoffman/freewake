@@ -56,4 +56,12 @@ class LiftingSurface{
 
         HorseshoeLattice lattice_;    
 };
+
+struct ReferenceSurface {
+    double S;
+    double b;
+    double cbar;
+    ReferenceSurface() : S( 1.0 ), b( 1.0 ), cbar(1.0) {}   
+    ReferenceSurface( double s_in, double b_in, double c_in ) : S(s_in), b(b_in), cbar(c_in){}
+};
 #endif

@@ -109,6 +109,7 @@ void LiftingSurface::setTaperRatio( double taperRatio ){
 void LiftingSurface::updateLattice(){
     lattice_.snapToAspectTaperSweep( getAspectRatio(), getTaperRatio(), getSweep());
     lattice_.flipTip( tipDihedralBreak_, tipDihedral_ );
+    lattice_.scale( rootChord_ );
     lattice_.rotate( Vec3D(0.0, 0.0, 0.0), Vec3D(1.0, 0.0, 0.0), pitch_);    
 }
 
