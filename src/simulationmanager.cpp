@@ -288,7 +288,6 @@ double SimulationManager::netLift(){
     return fomo_.aeroForce.z;
 }
 
-
 void SimulationManager::setReferenceSurface( ReferenceSurface s ){
     refSurf_ = s;
 }
@@ -311,6 +310,14 @@ double SimulationManager::referenceVelocity(){
 
 double SimulationManager::dt(){
     return dt_;
+}
+
+LiftingSurface& SimulationManager::getSurface(int i){
+    return *(surfaces_[i]);
+}
+
+int SimulationManager::getNSurfaces(){
+    return surfaces_.size();
 }
 
 Vec3D SimulationManager::vInfinity( Vec3D p ){

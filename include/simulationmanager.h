@@ -49,6 +49,8 @@ class SimulationManager {
         double dt();
         ReferenceSurface referenceSurface();
         double referenceVelocity();
+        LiftingSurface& getSurface( int );
+        int getNSurfaces();
         Vec3D getGlobalLinearVelocity();
         int hijToN( int, int, int);
         int nInJToSuperN( int, int);

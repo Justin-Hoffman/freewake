@@ -26,14 +26,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         }
         
         int nFields = 6;
-        int nSurfaces = 1;
+        int nSurfaces = sm.getNSurfaces();
         const char* fieldNames[] = {"xSurface","ySurface","zSurface","xWake","yWake", "zWake"}; 
         plhs[0] = mxCreateStructMatrix(1, nSurfaces , nFields, fieldNames);
         for(int iSurface = 0; iSurface < nSurfaces; iSurface++){
-            HorseshoeLattice& hl = ls.getHorseshoeLattice();  
+            LiftingSurface &l = sm.getSurface( iSurface );
+            HorseshoeLattice &hl = l.getHorseshoeLattice();  
             //Fill endpoint matrices
-            int ni = ls.getHorseshoeLattice().ni()+1;
-            int nj = ls.getHorseshoeLattice().nj()+1;
+            int ni = hl.ni()+1;
+            int nj = hl.nj()+1;
             int maxEndpoints = ni*nj; 
             mxArray* xmat = mxCreateDoubleMatrix(ni,nj, mxREAL);
             mxArray* ymat = mxCreateDoubleMatrix(ni,nj, mxREAL);
@@ -54,7 +55,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
             mxSetFieldByNumber(plhs[0],iSurface,2,zmat);
 
             //Fill wake endpoint matrices
-            VortexLattice& vl = ls.getVortexLattice();  
+            VortexLattice& vl = l.getVortexLattice();  
             ni = vl.ni();
             nj = vl.nj();
             maxEndpoints = ni*nj; 
