@@ -18,10 +18,10 @@ class VortexLattice : public VortexContainer{
         int ni();
         int nj();
         
-        std::vector<std::vector<Vec3D>>& endPoints();
-        std::vector<std::vector<Vec3D>>& endPointVelocity();
-        std::vector<std::vector<double>>& gammaI();
-        std::vector<std::vector<double>>& gammaJ();
+        std::vector< std::vector<Vec3D> >& endPoints();
+        std::vector< std::vector<Vec3D> >& endPointVelocity();
+        std::vector< std::vector<double> >& gammaI();
+        std::vector< std::vector<double> >& gammaJ();
 
         void fixToTrailingEdge( HorseshoeLattice &h );
         void advect( double dt );
@@ -37,12 +37,12 @@ class VortexLattice : public VortexContainer{
         int ni_;
         int nj_;
 
-        std::vector<std::vector<Vec3D>> endPoints_;
-        std::vector<std::vector<Vec3D>> endPointV_;
-        std::vector<std::vector<double>> gammaI_;
-        std::vector<std::vector<double>> rcI_;
-        std::vector<std::vector<double>> gammaJ_;
-        std::vector<std::vector<double>> rcJ_;
+        std::vector< std::vector<Vec3D> > endPoints_;
+        std::vector< std::vector<Vec3D> > endPointV_;
+        std::vector< std::vector<double> > gammaI_;
+        std::vector< std::vector<double> > rcI_;
+        std::vector< std::vector<double> > gammaJ_;
+        std::vector< std::vector<double> > rcJ_;
 
 };
 

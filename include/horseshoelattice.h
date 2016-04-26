@@ -20,11 +20,11 @@ class HorseshoeLattice : public VortexContainer{
         bool hasTrailers();
         Vec3D trailerVec();
         
-        std::vector<std::vector<Vec3D>>& getEndPoints();
-        std::vector<std::vector<Vec3D>>& getControlPoints();
-        std::vector<std::vector<Vec3D>>& getControlPointNormals();
-        std::vector<std::vector<double>>& getGamma();
-        std::vector<double>& getNetGamma();
+        std::vector< std::vector<Vec3D> >& getEndPoints();
+        std::vector< std::vector<Vec3D> >& getControlPoints();
+        std::vector< std::vector<Vec3D> >& getControlPointNormals();
+        std::vector< std::vector<double> >& getGamma();
+        std::vector< double >& getNetGamma();
         
         virtual Vec3D calcInfluenceCoefficient( Vec3D p, int n);
         virtual Vec3D calcInducedVelocity( Vec3D );
@@ -59,10 +59,10 @@ class HorseshoeLattice : public VortexContainer{
         Vec3D trailerVec_;
 
 
-        std::vector<std::vector<Vec3D>> endPoints;
-        std::vector<std::vector<Vec3D>> controlPoints;
-        std::vector<std::vector<Vec3D>> controlPointNormals;
-        std::vector<std::vector<double>> gamma;
+        std::vector< std::vector<Vec3D> > endPoints;
+        std::vector< std::vector<Vec3D> > controlPoints;
+        std::vector< std::vector<Vec3D> > controlPointNormals;
+        std::vector< std::vector<double> > gamma;
         
         std::vector<double> netGamma_;
 

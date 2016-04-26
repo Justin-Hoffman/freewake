@@ -12,7 +12,7 @@ CPP = g++
 CFLAGS = -Wall -Wextra -Weffc++ -fPIC -std=c++11 -g -O0 -fopenmp 
 CPPFLAGS = -std=c++11 -L ./ -lgcov -llapacke -lm -lgomp
 #CPPFLAGS = -std=c++11 -L ./ -lpthread
-INC = -I ./include -I ./src -I $(MKLROOT)/lib/intel64/ 
+INC = -I ./include -I ./src 
 LDFLAGS =  -shared
 SRCDIR  = ./src/
 
@@ -49,7 +49,7 @@ $(GTEST_SRC_DIR)vortexlatticetest.cpp \
 $(GTEST_SRC_DIR)vortexmathtest.cpp \
 
 #### TARGETS ####
-all: freewake allTests check
+all: freewake allTests check libfreewake.so
 
 freewake: $(CPP_OBJ_FILES) obj/main.o
 	$(CPP) \
@@ -66,8 +66,11 @@ $(CPPFLAGS) $(GTEST_CPP_FLAGS$) $(INC) -I $(GTEST_INC_DIR) /usr/lib/libgtest.a -
 obj/%.o: src/%.cpp
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(INC) -c -o $@ $<
 
+libfreewake.so: obj/liftingsurface.o obj/horseshoelattice.o obj/simulationmanager.o obj/vec3d.o obj/vortexlattice.o obj/vortexmath.o
+	$(CPP) ./obj/liftingsurface.o ./obj/horseshoelattice.o ./obj/simulationmanager.o ./obj/vec3d.o ./obj/vortexlattice.o ./obj/vortexmath.o  $(CPPFLAGS) $(INC) $(LDFLAGS) -o ./libs/libfreewake.so 
+
 check: 
 	./test/allTests
 
 clean:
-	rm -rf ./src/*o freewake ./obj/*.o ./test/allTests
+	rm -rf ./src/*o freewake ./lib/libfreewake.so ./obj/*.o ./test/allTests

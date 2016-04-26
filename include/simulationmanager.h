@@ -23,12 +23,12 @@ struct ForcesAndMoments { //Container forces and moments in body coordinates (X,
 class SimulationManager {
     public:
         SimulationManager();
-        SimulationManager( SimulationManager& ); 
+        SimulationManager( const SimulationManager& ); 
         ~SimulationManager();
-        SimulationManager & operator=( const SimulationManager& ); 
         
         void addSurface( LiftingSurface* s);
         void advectWake();
+        void calculateWakeVelocities();
         void fillWakeBC();
         void setGlobalLinearVelocity( Vec3D v );
         void solve();
@@ -57,10 +57,8 @@ class SimulationManager {
         bool needsSolve_; 
         std::vector<LiftingSurface*> surfaces_;
         std::vector<int>   nOffset_;
-        std::vector<std::vector<double>> lastGamma_;
-        std::vector<std::vector<double>> thisGamma_;
-        double* a;
-        double* b;
+        std::vector< std::vector<double> > lastGamma_;
+        std::vector< std::vector<double> > thisGamma_;
         ReferenceSurface refSurf_;
         double refV_;
         double dt_;
@@ -72,7 +70,6 @@ class SimulationManager {
         void fillRHS( double* );
         void fillLHS( double* );
         
-        void calculateWakeVelocities();
         
         Vec3D vInfinity( Vec3D p );
 };

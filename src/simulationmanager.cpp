@@ -3,14 +3,14 @@
 #include "lapacke.h"
 #include "string.h"
 
-SimulationManager::SimulationManager() : needsSolve_( true ), surfaces_(), nOffset_(1,0), lastGamma_(), thisGamma_(), a(NULL), b(NULL), 
+SimulationManager::SimulationManager() : needsSolve_( true ), surfaces_(), nOffset_(1,0), lastGamma_(), thisGamma_(), 
                                          refSurf_( ReferenceSurface(1.0, 1.0, 1.0) ), refV_(1.0), dt_( 0.10 ), 
                                          globalLinearVelocity_(), globalRotationAxis_(0.0,0.0,1.0), globalRotationRate_(0.0), 
                                          fomo_() {
 
 }
 
-SimulationManager::SimulationManager( SimulationManager& s ) : needsSolve_( s.needsSolve_ ), surfaces_(s.surfaces_), nOffset_(s.nOffset_), lastGamma_( s.lastGamma_ ), thisGamma_( s.thisGamma_ ), a(NULL), b(NULL), 
+SimulationManager::SimulationManager( const SimulationManager& s ) : needsSolve_( s.needsSolve_ ), surfaces_(s.surfaces_), nOffset_(s.nOffset_), lastGamma_( s.lastGamma_ ), thisGamma_( s.thisGamma_ ),
                                                                refSurf_( s.refSurf_ ), refV_( s.refV_ ), dt_( s.dt_ ), 
                                                                globalLinearVelocity_( s.globalLinearVelocity_), globalRotationAxis_( s.globalRotationAxis_ ), globalRotationRate_( s.globalRotationRate_),
                                                                fomo_( s.fomo_ ) {
@@ -39,16 +39,20 @@ Vec3D SimulationManager::getGlobalLinearVelocity(){
 }
 
 void SimulationManager::step(){
+    //printf("Solve\n");
     solve();
+    //printf("Calculate Wake Velocities\n");
     calculateWakeVelocities();
+    //printf("Advect Wake\n");
     advectWake();
+    //printf("Fill Wake BC\n");
     fillWakeBC();
 }
 
  
 void SimulationManager::solve(){
     if ( needsSolve_ ){
-        int maxN = nOffset_.back();
+        lapack_int maxN = nOffset_.back();
         double* a = (double*) malloc( maxN*maxN*sizeof(double) );
         double* b = (double*) malloc( maxN*     sizeof(double) );
         memset(a, 0, maxN*maxN*sizeof(double));
@@ -57,8 +61,8 @@ void SimulationManager::solve(){
         fillRHS( b ); // Fill right hand side (b) of the linear system ( Ax = b )
         fillLHS( a ); // Fill left hand side (A) of the linear system  ( Ax = b )
 
-        int n = maxN, nrhs = 1, lda = n, ldb = nrhs, info;
-        int* ipiv = (int*) malloc( maxN*sizeof(int) );
+        lapack_int n = maxN, nrhs = 1, lda = n, ldb = nrhs, info;
+        lapack_int* ipiv = (lapack_int*) malloc( maxN*sizeof(int) );
        
         //printMatrix( "LHS Matrix A", n, n,    a, lda );
         //printMatrix( "RHS Matrix B", n, nrhs, b, ldb );
@@ -96,7 +100,7 @@ void SimulationManager::solve(){
         }
         //Find net forces and moments on all lifting surfaces
         integrateForceAndMoment();
-        free(a); free(b);
+        free(a); free(b); free(ipiv);
     }
 }
  
