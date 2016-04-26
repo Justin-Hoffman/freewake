@@ -39,15 +39,10 @@ Vec3D SimulationManager::getGlobalLinearVelocity(){
 }
 
 void SimulationManager::step(){
-    printf("Solve\n");
     solve();
-    printf("Find Wake V\n");
     calculateWakeVelocities();
-    printf("Advect\n");
     advectWake();
-    printf("Fill BC\n");
     fillWakeBC();
-    printf("Repeat\n");
 }
 
  

@@ -161,9 +161,9 @@ TEST_F(SimulationManagerTest, TestHighARLiftingLine){
 
 TEST_F(SimulationManagerTest, TestFreeWake){
     sm->setReferenceVelocity( 100.0 );
-    sm->setDt( 0.01 );
+    sm->setDt( 0.02 );
     sm->setReferenceSurface( ReferenceSurface( 10.0, 10.0, 1.0) );
-    LiftingSurface ls = LiftingSurface(10,1,100);
+    LiftingSurface ls = LiftingSurface(10,1,50);
     ls.setFreeWake( true );
     ls.setAspectRatio( 10.0 );
     ls.setPitch( 0.0 * M_PI / 180.0 );
@@ -173,7 +173,7 @@ TEST_F(SimulationManagerTest, TestFreeWake){
     sm->setGlobalLinearVelocity( Vec3D(-100.0, 0.0, 0.0).rotate(Vec3D(0.0, 0.0, 0.0), Vec3D(0.0, 1.0, 0.0), -10.0*M_PI/180.0 ) );
     double Cl = -10.0;
     int nStep = 0;
-    while ( nStep < 125 ){
+    while ( nStep < 100 ){
         sm->step();
         sm->printState(); 
         nStep++; 
