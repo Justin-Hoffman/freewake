@@ -7,6 +7,7 @@
 #include "liftingsurface.h"
 #include "vortexlattice.h"
 
+
 struct ForcesAndMoments { //Container forces and moments in body coordinates (X,Y,Z) and aero coordinates(Drag,Sideforce,Lift)
     Vec3D bodyForce;
     Vec3D bodyMoment;

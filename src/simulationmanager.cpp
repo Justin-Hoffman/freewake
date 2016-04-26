@@ -3,6 +3,8 @@
 #include "lapacke.h"
 #include "string.h"
 
+extern void dgesv_(int*, int*, double*, int*, int*, double*, int*, int*);
+
 SimulationManager::SimulationManager() : needsSolve_( true ), surfaces_(), nOffset_(1,0), lastGamma_(), thisGamma_(), 
                                          refSurf_( ReferenceSurface(1.0, 1.0, 1.0) ), refV_(1.0), dt_( 0.10 ), 
                                          globalLinearVelocity_(), globalRotationAxis_(0.0,0.0,1.0), globalRotationRate_(0.0), 
@@ -61,13 +63,13 @@ void SimulationManager::solve(){
         fillRHS( b ); // Fill right hand side (b) of the linear system ( Ax = b )
         fillLHS( a ); // Fill left hand side (A) of the linear system  ( Ax = b )
 
-        lapack_int n = maxN, nrhs = 1, lda = n, ldb = nrhs, info;
+        lapack_int n = maxN, nrhs = 1, lda = n, ldb = n, info;
         lapack_int* ipiv = (lapack_int*) malloc( maxN*sizeof(int) );
        
         //printMatrix( "LHS Matrix A", n, n,    a, lda );
         //printMatrix( "RHS Matrix B", n, nrhs, b, ldb );
        
-        info = LAPACKE_dgesv( LAPACK_ROW_MAJOR, n, nrhs, a, lda, ipiv, b, ldb );
+        dgesv_( &n, &nrhs, a, &lda, ipiv, b, &ldb, &info );
 
         /* Check for the exact singularity */
         if( info > 0 ) {
@@ -326,7 +328,7 @@ int SimulationManager::hijToN( int h, int i, int j ){
 
 int SimulationManager::nInJToSuperN( int ni, int nj ){
     int maxN = nOffset_.back();
-    int superN = ni*maxN+nj; 
+    int superN = nj*maxN+ni; 
     return superN;
 }
 

@@ -25,11 +25,11 @@ int main( int argc, char* argv[] ) {
     sm.addSurface(&ls);
     sm.setGlobalLinearVelocity( Vec3D(-100.0, 0.0, 0.0).rotate(Vec3D(0.0, 0.0, 0.0), Vec3D(0.0, 1.0, 0.0), -10.0*M_PI/180.0 ) );
     int nStep = 0;
-    while ( nStep < 16 ){
+    while ( nStep < 500 ){
         sm.step();
         nStep++; 
     }
-    //sm.printState(); 
+    sm.printState(); 
     return EXIT_SUCCESS;
 } 
 
