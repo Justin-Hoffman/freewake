@@ -2,9 +2,9 @@
 #include <cstdlib>
 #include "matlabinterface.h"
 
+extern void _main();
 extern "C"
-void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
-{ 
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){ 
         //Run Simulation
         SimulationManager sm = SimulationManager();
         sm.setReferenceVelocity( 100.0 );
@@ -20,12 +20,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         sm.addSurface(&ls);
         sm.setGlobalLinearVelocity( Vec3D(-100.0, 0.0, 0.0).rotate(Vec3D(0.0, 0.0, 0.0), Vec3D(0.0, 1.0, 0.0), -10.0*M_PI/180.0 ) );
         int nStep = 0;
-        /*printf("Solve\n");
+       // mexprintf("Solve\n");
         while ( nStep < 100 ){
             sm.step();
             nStep++; 
         }
-        
+        /*
         int nFields = 3; 
         mxClassID* classIDFlags = (mxClassID*) mxCalloc( nFields, sizeof(mxClassID) );
         for( int iField = 0; iField < nFields; iField++){

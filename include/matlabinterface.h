@@ -11,4 +11,7 @@
 #include "matrix.h"
 #include "mex.h"
 
+extern "C" 
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]);
+
 #endif
