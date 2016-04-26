@@ -5,6 +5,7 @@
 #include <utility>
 
 #include "liftingsurface.h"
+#include "vortexlattice.h"
 
 struct ForcesAndMoments { //Container forces and moments in body coordinates (X,Y,Z) and aero coordinates(Drag,Sideforce,Lift)
     Vec3D bodyForce;
@@ -27,10 +28,14 @@ class SimulationManager {
         SimulationManager & operator=( const SimulationManager& ); 
         
         void addSurface( LiftingSurface* s);
+        void advectWake();
+        void fillWakeBC();
         void setGlobalLinearVelocity( Vec3D v );
         void solve();
         void setReferenceSurface( ReferenceSurface );
         void setReferenceVelocity( double );
+        void setDt( double );
+        void step();
         void integrateForceAndMoment();
         void printState();
 
@@ -40,6 +45,7 @@ class SimulationManager {
         double netLift();
         double netLiftDirect();
         double netDrag();
+        double dt();
         ReferenceSurface referenceSurface();
         double referenceVelocity();
         Vec3D getGlobalLinearVelocity();
@@ -51,15 +57,23 @@ class SimulationManager {
         bool needsSolve_; 
         std::vector<LiftingSurface*> surfaces_;
         std::vector<int>   nOffset_;
+        std::vector<std::vector<double>> lastGamma_;
+        std::vector<std::vector<double>> thisGamma_;
         double* a;
         double* b;
         ReferenceSurface refSurf_;
         double refV_;
+        double dt_;
         Vec3D globalLinearVelocity_;
         Vec3D globalRotationAxis_;
         double globalRotationRate_;
         ForcesAndMoments fomo_; 
-
+        
+        void fillRHS( double* );
+        void fillLHS( double* );
+        
+        void calculateWakeVelocities();
+        
         Vec3D vInfinity( Vec3D p );
 };
 

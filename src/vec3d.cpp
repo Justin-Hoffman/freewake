@@ -46,7 +46,7 @@ double Vec3D::magnitude() const {
 Vec3D Vec3D::norm() const {
     Vec3D vOut = Vec3D(*this);
     double m = vOut.magnitude();
-    
+    if (m == 0.0){ m = 1.0; }; 
     return (vOut/m);
 };
 

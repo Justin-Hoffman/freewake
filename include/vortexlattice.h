@@ -4,6 +4,7 @@
 #include <vector>
 #include <utility>
 
+#include "horseshoelattice.h"
 #include "vec3d.h"
 #include "vortexcontainer.h"
 
@@ -21,6 +22,10 @@ class VortexLattice : public VortexContainer{
         std::vector<std::vector<Vec3D>>& endPointVelocity();
         std::vector<std::vector<double>>& gammaI();
         std::vector<std::vector<double>>& gammaJ();
+
+        void fixToTrailingEdge( HorseshoeLattice &h );
+        void advect( double dt );
+        void printState();
         
         virtual Vec3D calcInfluenceCoefficient( Vec3D p, int n);
         virtual Vec3D calcInducedVelocity( Vec3D );
@@ -35,7 +40,9 @@ class VortexLattice : public VortexContainer{
         std::vector<std::vector<Vec3D>> endPoints_;
         std::vector<std::vector<Vec3D>> endPointV_;
         std::vector<std::vector<double>> gammaI_;
+        std::vector<std::vector<double>> rcI_;
         std::vector<std::vector<double>> gammaJ_;
+        std::vector<std::vector<double>> rcJ_;
 
 };
 

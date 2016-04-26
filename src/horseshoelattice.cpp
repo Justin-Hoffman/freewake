@@ -7,7 +7,8 @@ HorseshoeLattice::HorseshoeLattice() : rc_(1E-6), ni_( 1 ), nj_( 1 ), hasTrailer
                                  endPoints( 2, std::vector<Vec3D>( 2, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  controlPoints( 1, std::vector<Vec3D>( 1, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  controlPointNormals( 1, std::vector<Vec3D>( 1, Vec3D(0.0, 0.0, 1.0) ) ), 
-                                 gamma( 1, std::vector<double>( 1, 0.0  ) ) {
+                                 gamma( 1, std::vector<double>( 1, 0.0  ) ), 
+                                 netGamma_( 1, 0.0 ){
  
 }
 
@@ -16,7 +17,8 @@ HorseshoeLattice::HorseshoeLattice( int ni, int nj ) :
                                  endPoints( ni+1, std::vector<Vec3D>( nj+1, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  controlPoints( ni, std::vector<Vec3D>( nj, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  controlPointNormals( ni, std::vector<Vec3D>( nj, Vec3D(0.0, 0.0, 1.0) ) ), 
-                                 gamma( ni, std::vector<double>( nj, 0.0  ) ){
+                                 gamma( ni, std::vector<double>( nj, 0.0  ) ),
+                                 netGamma_(ni, 0.0){
  
 }
 
@@ -25,7 +27,8 @@ HorseshoeLattice::HorseshoeLattice( const HorseshoeLattice &v ) :
                                  endPoints( v.endPoints ),
                                  controlPoints( v.controlPoints ),
                                  controlPointNormals( v.controlPointNormals ),
-                                 gamma( v.gamma ){
+                                 gamma( v.gamma ),
+                                 netGamma_( v.netGamma_ ){
  
 }
 
@@ -305,6 +308,10 @@ std::vector<std::vector<Vec3D>>& HorseshoeLattice::getControlPointNormals(){
  
 std::vector<std::vector<double>>& HorseshoeLattice::getGamma(){
     return gamma;
+} 
+
+std::vector<double>& HorseshoeLattice::getNetGamma(){
+    return netGamma_;
 } 
 
 void HorseshoeLattice::setHasTrailers( bool b ) {

@@ -2,6 +2,9 @@
 #include <gmock/gmock.h>
 #include "vortexlattice.h"
 
+#include "horseshoelattice.h"
+#include "liftingsurface.h"
+
 class VortexLatticeTest: public ::testing::Test {
 	public:
 	VortexLattice *vl;
@@ -53,4 +56,20 @@ TEST_F(VortexLatticeTest, TestIJFromN){
     EXPECT_EQ( 1, vl->ijFromN( 11 ).first );
     EXPECT_EQ( 5, vl->ijFromN( 11 ).second );
     
+}
+
+TEST_F(VortexLatticeTest, TestSnapToTrailingEdge){
+    LiftingSurface ls = LiftingSurface(4,3);
+    ls.setTaperRatio( 0.5 );
+    ls.setAspectRatio( 4.0/0.75 ); //Adjusts span
+    ls.updateLattice();  
+    HorseshoeLattice hl = ls.getHorseshoeLattice();  
+
+    VortexLattice vl = VortexLattice(5,5); //VortexLattice counts edges so we need 5 spanwise instead of 4
+    vl.fixToTrailingEdge( hl );
+    for (int i = 0; i < vl.ni(); i++){
+        EXPECT_DOUBLE_EQ( hl.getEndPoints()[i][3].x, vl.endPoints()[i][0].x );
+        EXPECT_DOUBLE_EQ( hl.getEndPoints()[i][3].y, vl.endPoints()[i][0].y );
+        EXPECT_DOUBLE_EQ( hl.getEndPoints()[i][3].z, vl.endPoints()[i][0].z );
+    } 
 }

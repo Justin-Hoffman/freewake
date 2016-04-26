@@ -6,16 +6,22 @@
 #include <tuple>
 
 #include "horseshoelattice.h"
+#include "vortexlattice.h"
 
+class VortexLattice;
 class LiftingSurface{
     public:
         LiftingSurface();         //!< 
         LiftingSurface( const LiftingSurface& );         //!< 
         LiftingSurface( int nSpan, int nChord );         //!< 
+        LiftingSurface( int nSpan, int nChord, int nWake );         //!< 
         ~LiftingSurface();        //!< 
         
-        HorseshoeLattice& getLattice();
+        HorseshoeLattice& getHorseshoeLattice();
+        VortexLattice& getVortexLattice();
         
+        bool freeWake();   
+     
         double getAspectRatio();
         double getSpan();
         double getSweep();
@@ -26,9 +32,14 @@ class LiftingSurface{
         double getTipDihedral();
         double getTipDihedralBreak();
         
+        Vec3D calcInducedVelocity( Vec3D );
+    
         int nSpan();
         int nChord();
+        int nWake();
         
+        void setFreeWake( bool );   
+
         void setAspectRatio( double );
         void setSpan( double );
         void setSweep( double );
@@ -38,10 +49,12 @@ class LiftingSurface{
         void setTaperRatio( double );
         void setTipDihedral( double );
         void setTipDihedralBreak( double );
+        void setVortexLattice( VortexLattice &v );
 
         void updateLattice();
                
     private:
+        bool freeWake_;
         double span_;
         double sweep_;
         double pitch_;
@@ -53,8 +66,10 @@ class LiftingSurface{
         
         int nSpan_;
         int nChord_;
-
-        HorseshoeLattice lattice_;    
+        int nWake_;
+        
+        HorseshoeLattice horseshoeLattice_;    
+        VortexLattice vortexLattice_;    
 };
 
 struct ReferenceSurface {

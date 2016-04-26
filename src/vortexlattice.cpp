@@ -1,11 +1,14 @@
 #include "vortexlattice.h"
 #include "vortexmath.h"
+#include "stdio.h"
 
 VortexLattice::VortexLattice() : ni_( 2 ), nj_( 2 ), 
                                  endPoints_( 2, std::vector<Vec3D>( 2, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  endPointV_( 2, std::vector<Vec3D>( 2, Vec3D(0.0, 0.0, 0.0) ) ), 
-                                 gammaI_( 2, std::vector<double>( 2, 0.0  ) ) , 
-                                 gammaJ_( 2, std::vector<double>( 2, 0.0  ) ) {
+                                 gammaI_( 1, std::vector<double>( 2, 0.0  ) ) , 
+                                 rcI_( 1, std::vector<double>( 2, 1.E-4  ) ) , 
+                                 gammaJ_( 2, std::vector<double>( 1, 0.0  ) ) ,
+                                 rcJ_( 2, std::vector<double>( 1, 1.E-4 ) ) {
  
 }
 
@@ -14,7 +17,9 @@ VortexLattice::VortexLattice( int ni, int nj ) :
                                  endPoints_( ni, std::vector<Vec3D>( nj, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  endPointV_( ni, std::vector<Vec3D>( nj, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  gammaI_( ni-1, std::vector<double>( nj, 0.0  ) ), 
-                                 gammaJ_( ni, std::vector<double>( nj-1, 0.0  ) ){
+                                 rcI_( ni-1, std::vector<double>( nj, 1.E-4  ) ), 
+                                 gammaJ_( ni, std::vector<double>( nj-1, 0.0  ) ),
+                                 rcJ_( ni, std::vector<double>( nj-1, 1.E-4  ) ){
  
 }
 
@@ -23,7 +28,9 @@ VortexLattice::VortexLattice( const VortexLattice &v ) :
                                  endPoints_( v.endPoints_ ),
                                  endPointV_( v.endPointV_ ),
                                  gammaI_( v.gammaI_ ), 
-                                 gammaJ_( v.gammaJ_ ){
+                                 rcI_( v.rcI_ ), 
+                                 gammaJ_( v.gammaJ_ ),
+                                 rcJ_( v.rcJ_ ){
  
 }
 
@@ -38,26 +45,71 @@ Vec3D VortexLattice::calcInfluenceCoefficient( Vec3D p, int n ){
     int j = ij.second;
     Vec3D r1, r2, aOut;
     aOut = Vec3D(0.0, 0.0, 0.0);
-
     if ( i < ni_ ){ 
         r1 = (endPoints_[i][j]);
         r2 = (endPoints_[i+1][j]);
-        aOut = BiotSavart(r1, r2, 0.0);
+        aOut = BiotSavart(r1, r2, rcI_[i][j] );
     }
     if ( j < nj_ ){
         r1 = (endPoints_[i][j]);
         r2 = (endPoints_[i][j+1]);
-        aOut += BiotSavart(r1, r2, 0.0);
+        aOut += BiotSavart(r1, r2, rcJ_[i][j] );
     } 
 
     return aOut;
 }
 
 Vec3D VortexLattice::calcInducedVelocity( Vec3D p){
-    Vec3D vOut = Vec3D();
-    
+    Vec3D r1, r2, aOut = Vec3D();
+    double vx = 0.0, vy = 0.0, vz = 0.0;
+    #pragma omp parallel for private( r1, r2) reduction(+:vx,vy,vz)
+    for ( int i = 0; i < ni_; i++){
+        Vec3D aTmp = Vec3D(0.0, 0.0, 0.0);//Hackery because I can't use openMP reduce on a class
+        for (int j = 0; j < nj_; j++){
+            if (i < ni_-1) {
+                //Contribution of spanwise (i) edge filaments
+                r1 = (endPoints_[i  ][j] - p);
+                r2 = (endPoints_[i+1][j] - p);
+                aTmp += BiotSavart( r1, r2, rcI_[i][j] )*gammaI_[i][j];
+            }
+            if (j < nj_-1) {
+                //Contribution of chordwise (j) edge filaments
+                r1 = (endPoints_[i][j  ] - p);
+                r2 = (endPoints_[i][j+1] - p);
+                aTmp += BiotSavart( r1, r2, rcJ_[i][j] )*gammaJ_[i][j];
+            }    
+        }
+        vx += aTmp.x;
+        vy += aTmp.y;
+        vz += aTmp.z;
+    }
+    aOut.x = vx; aOut.y = vy; aOut.z = vz;
+    return aOut;
+}
 
-    return vOut;
+void VortexLattice::advect( double dt ){
+    for ( int i = ni_-1; i > -1; i--){
+        for (int j = nj_-1; j > 0; j--){
+            endPoints_[i][j] = endPoints_[i][j-1] + endPointV_[i][j-1]*dt;
+            if ( i < ni_-1 ){
+                gammaI_[i][j] = gammaI_[i][j-1];
+                rcI_[i][j] = VortexCoreGrowth( rcI_[i][j-1], dt );
+                rcI_[i][j] = 1E-6;
+            }
+            if ( j < nj_-1 ){
+                gammaJ_[i][j] = gammaJ_[i][j-1];
+                rcJ_[i][j] = VortexCoreGrowth( rcJ_[i][j-1], dt );
+                rcJ_[i][j] = 1E-6;
+            }
+        }
+    }    
+}
+
+void VortexLattice::fixToTrailingEdge( HorseshoeLattice &h ){
+    int maxj = h.nj();
+    for ( int i = 0; i < ni_; i++){
+        endPoints_[i][0] = h.getEndPoints()[i][maxj];
+    }
 }
 
 int VortexLattice::ni(){
@@ -90,4 +142,21 @@ std::pair<int, int> VortexLattice::ijFromN( int n ){
     ij.second = n%(ni_);
 
     return ij;
+}
+
+
+void VortexLattice::printState(){
+    for (int i = 0; i < ni_; i++){
+        for(int j = 0; j < nj_; j++){
+            printf("loop at i = %i\n endPoint at",i);   
+            endPoints_[i][j].printState();      
+            endPointV_[i][j].printState();     
+    
+        }
+    }
+    for (int i = 0; i < ni_-1; i++){
+        for(int j = 0; j < nj_-1; j++){
+            printf("loop at i = %i rcI/J = %5.5e / %5.5e \n",i, rcI_[i][j], rcJ_[i][j]); 
+        }
+    }  
 }
