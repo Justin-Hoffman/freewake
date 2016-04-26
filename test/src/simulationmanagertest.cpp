@@ -161,9 +161,9 @@ TEST_F(SimulationManagerTest, TestHighARLiftingLine){
 
 TEST_F(SimulationManagerTest, TestFreeWake){
     sm->setReferenceVelocity( 100.0 );
-    sm->setDt( 0.02 );
+    sm->setDt( 0.1 );
     sm->setReferenceSurface( ReferenceSurface( 10.0, 10.0, 1.0) );
-    LiftingSurface ls = LiftingSurface(10,1,50);
+    LiftingSurface ls = LiftingSurface(10,1,10);
     ls.setFreeWake( true );
     ls.setAspectRatio( 10.0 );
     ls.setPitch( 0.0 * M_PI / 180.0 );
@@ -175,7 +175,6 @@ TEST_F(SimulationManagerTest, TestFreeWake){
     int nStep = 0;
     while ( nStep < 100 ){
         sm->step();
-        sm->printState(); 
         nStep++; 
     }
     //double gamma[10] = { 35.03083712393401328, 43.13601948056102486, 46.29353105076378938, 47.71129676895412075, 48.28231926132752250, 48.28231926132752960, 47.71129676895412075, 46.29353105076377517, 43.13601948056103197, 35.03083712393401328};
