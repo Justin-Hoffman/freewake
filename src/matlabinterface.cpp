@@ -7,20 +7,28 @@ extern "C"
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){ 
         //Run Simulation
         SimulationManager sm = SimulationManager();
-        sm.setReferenceVelocity( 100.0 );
-        sm.setDt( 0.01 );
+        sm.setReferenceVelocity( 1.0 );
+        sm.setDt( 0.02 );
         sm.setReferenceSurface( ReferenceSurface( 10.0, 10.0, 1.0) );
-        LiftingSurface ls = LiftingSurface(20,3,50);
+        LiftingSurface ls = LiftingSurface(10,5,35);
         ls.setFreeWake( true );
-        ls.setAspectRatio( 10.0 );
+        ls.setAspectRatio( 4.75 );
         ls.setPitch( 5.0 * M_PI / 180.0 );
         ls.getHorseshoeLattice().setHasTrailers(false); 
         ls.updateLattice( );
+        ls.getHorseshoeLattice().translate( Vec3D(0.0, 1.25, 0.0) );
+        LiftingSurface ls2 = LiftingSurface(ls);
+        ls2.setFreeWake( true );
+        ls2.getHorseshoeLattice().rotate(  Vec3D(0.0,0.0,0.0), Vec3D(0.0, 0.0, -1.0), M_PI );
+        
         sm.addSurface(&ls);
-        sm.setGlobalLinearVelocity( Vec3D(-100.0, 0.0, 0.0).rotate(Vec3D(0.0, 0.0, 0.0), Vec3D(0.0, 1.0, 0.0), -0.0*M_PI/180.0 ) );
+        sm.addSurface(&ls2);
+        sm.setGlobalLinearVelocity( Vec3D(0.0, 0.0, 0.0).rotate(Vec3D(0.0, 0.0, 0.0), Vec3D(0.0, 1.0, 0.0), -0.0*M_PI/180.0 ) );
+        sm.setGlobalRotationAxis( Vec3D(0.0, 0.0, 1.0).rotate(Vec3D(0.0, 0.0, 0.0), Vec3D(0.0, 1.0, 0.0), -0.0*M_PI/180.0 ) );
+        sm.setGlobalRotationRate( 2.0*M_PI );
         int nStep = 0;
        // mexprintf("Solve\n");
-        while ( nStep < 100 ){
+        while ( nStep < 200 ){
             sm.step();
             nStep++; 
         }
