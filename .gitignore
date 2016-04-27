@@ -2,4 +2,4 @@
 ./test/alltests
 ./obj/*
 ./libs/*
-
+./matlab/matlabinterface.*
