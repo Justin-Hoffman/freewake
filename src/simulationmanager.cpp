@@ -1,7 +1,7 @@
 #include <cmath>
 #include "simulationmanager.h"
-#include "lapacke.h"
 #include "string.h"
+#include "lapacke.h"
 
 extern void dgesv_(int*, int*, double*, int*, int*, double*, int*, int*);
 
@@ -70,7 +70,7 @@ void SimulationManager::step(){
  
 void SimulationManager::solve(){
     if ( needsSolve_ ){
-        lapack_int maxN = nOffset_.back();
+        int maxN = nOffset_.back();
         double* a = (double*) malloc( maxN*maxN*sizeof(double) );
         double* b = (double*) malloc( maxN*     sizeof(double) );
         memset(a, 0, maxN*maxN*sizeof(double));
@@ -79,8 +79,8 @@ void SimulationManager::solve(){
         fillRHS( b ); // Fill right hand side (b) of the linear system ( Ax = b )
         fillLHS( a ); // Fill left hand side (A) of the linear system  ( Ax = b )
 
-        lapack_int n = maxN, nrhs = 1, lda = n, ldb = n, info;
-        lapack_int* ipiv = (lapack_int*) malloc( maxN*sizeof(int) );
+        int n = maxN, nrhs = 1, lda = n, ldb = n, info;
+        int* ipiv = (int*) malloc( maxN*sizeof(int) );
        
         //printMatrix( "LHS Matrix A", n, n,    a, lda );
         //printMatrix( "RHS Matrix B", n, nrhs, b, ldb );
