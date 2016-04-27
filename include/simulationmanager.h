@@ -32,6 +32,8 @@ class SimulationManager {
         void calculateWakeVelocities();
         void fillWakeBC();
         void setGlobalLinearVelocity( Vec3D v );
+        void setGlobalRotationAxis( Vec3D v );
+        void setGlobalRotationRate( double );
         void solve();
         void setReferenceSurface( ReferenceSurface );
         void setReferenceVelocity( double );
@@ -52,6 +54,8 @@ class SimulationManager {
         LiftingSurface& getSurface( int );
         int getNSurfaces();
         Vec3D getGlobalLinearVelocity();
+        Vec3D getGlobalRotationAxis();
+        double getGlobalRotationRate();
         int hijToN( int, int, int);
         int nInJToSuperN( int, int);
         std::tuple<int, int, int> hijFromN( int );

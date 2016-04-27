@@ -36,6 +36,22 @@ void SimulationManager::setGlobalLinearVelocity( Vec3D v ){
     globalLinearVelocity_ = v;
 }
 
+void SimulationManager::setGlobalRotationAxis( Vec3D v ){
+    globalRotationAxis_ = v;
+}
+
+void SimulationManager::setGlobalRotationRate( double r ){
+    globalRotationRate_ = r;
+}
+
+Vec3D SimulationManager::getGlobalRotationAxis(){
+    return globalRotationAxis_;
+}
+
+double SimulationManager::getGlobalRotationRate( ){
+   return globalRotationRate_;
+}
+
 Vec3D SimulationManager::getGlobalLinearVelocity(){
     return globalLinearVelocity_;
 }
