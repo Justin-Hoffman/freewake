@@ -94,12 +94,10 @@ void VortexLattice::advect( double dt ){
             if ( i < ni_-1 ){
                 gammaI_[i][j] = gammaI_[i][j-1];
                 rcI_[i][j] = VortexCoreGrowth( rcI_[i][j-1], dt );
-                rcI_[i][j] = 1E-6;
             }
             if ( j < nj_-1 ){
                 gammaJ_[i][j] = gammaJ_[i][j-1];
                 rcJ_[i][j] = VortexCoreGrowth( rcJ_[i][j-1], dt );
-                rcJ_[i][j] = 1E-6;
             }
         }
     }    
@@ -153,6 +151,13 @@ std::pair<int, int> VortexLattice::ijFromN( int n ){
     return ij;
 }
 
+void VortexLattice::initializeToHelix( Vec3D axis, double dTheta, double dZ ){
+    for ( int i = 0; i < ni_; i++){
+        for (int j = 1; j < nj_; j++){
+            endPoints_[i][j] = endPoints_[i][j-1].rotate( Vec3D(), axis, dTheta ) - axis.norm()*dZ;
+        }
+    }    
+}
 
 void VortexLattice::printState(){
     for (int i = 0; i < ni_; i++){

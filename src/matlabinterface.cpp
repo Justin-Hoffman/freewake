@@ -8,18 +8,24 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         //Run Simulation
         SimulationManager sm = SimulationManager();
         sm.setReferenceVelocity( 1.0 );
-        sm.setDt( 0.02 );
+        sm.setDt( 0.025 );
         sm.setReferenceSurface( ReferenceSurface( 10.0, 10.0, 1.0) );
-        LiftingSurface ls = LiftingSurface(6,4,80);
+        LiftingSurface ls = LiftingSurface(6,4,90);
         ls.setFreeWake( true );
         ls.setAspectRatio( 4.75 );
         ls.setPitch( 5.0 * M_PI / 180.0 );
         ls.getHorseshoeLattice().setHasTrailers(false); 
         ls.updateLattice( );
         ls.getHorseshoeLattice().translate( Vec3D(0.0, 1.25, 0.0) );
+        ls.getVortexLattice().fixToTrailingEdge( ls.getHorseshoeLattice() );
+        ls.getVortexLattice().initializeToHelix( Vec3D(0.0, 0.0, 1.0), (2.0*M_PI)*sm.dt(), -0.01 );
+
         LiftingSurface ls2 = LiftingSurface(ls);
         ls2.setFreeWake( true );
         ls2.getHorseshoeLattice().rotate(  Vec3D(0.0,0.0,0.0), Vec3D(0.0, 0.0, -1.0), M_PI );
+        ls2.getVortexLattice().fixToTrailingEdge( ls2.getHorseshoeLattice() );
+        ls2.getVortexLattice().initializeToHelix( Vec3D(0.0, 0.0, 1.0), (2.0*M_PI)*sm.dt(), -0.01 );
+        
         
         sm.addSurface(&ls);
         sm.addSurface(&ls2);
@@ -28,7 +34,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         sm.setGlobalRotationRate( 2.0*M_PI );
         int nStep = 0;
        // mexprintf("Solve\n");
-        while ( nStep < 250 ){
+        while ( nStep < 150 ){
             sm.step();
             nStep++; 
         }
