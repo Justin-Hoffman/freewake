@@ -136,6 +136,15 @@ std::vector<std::vector<double>>& VortexLattice::gammaJ(){
     return gammaJ_;
 } 
 
+std::vector<std::vector<double>>& VortexLattice::rcI(){
+    return rcI_;
+} 
+
+std::vector<std::vector<double>>& VortexLattice::rcJ(){
+    return rcJ_;
+} 
+
+
 std::pair<int, int> VortexLattice::ijFromN( int n ){
     std::pair<int, int> ij = std::pair<int, int>();
     ij.first = n/ni_;

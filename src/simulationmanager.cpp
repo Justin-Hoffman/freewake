@@ -69,20 +69,49 @@ void SimulationManager::step(){
     calculateWakeVelocities();
     advectWake();
     fillWakeBC();
-    
-    solve();
     calculateWakeVelocities();
-    //Reset X,Y,Z, but use new wake velocity
+    //Reset X,Y,Z,Gamma, but use new wake velocity
     for (int h = 0; h < (int) surfaces_.size(); h++){
         VortexLattice &vl = surfaces_[h]->getVortexLattice();
         VortexLattice &vlold = originalSurfaces[h].getVortexLattice();
         if (surfaces_[h]->freeWake()){
-            vl.endPoints() = std::move(vlold.endPoints());
+            vl.endPoints() = std::vector<std::vector<Vec3D> >(vlold.endPoints());
+            vl.gammaI() = std::vector<std::vector< double > >(vlold.gammaI());
+            vl.gammaJ() = std::vector<std::vector< double > >(vlold.gammaJ());
+            vl.rcI() = std::vector<std::vector< double > >(vlold.rcI());
+            vl.rcJ() = std::vector<std::vector< double > >(vlold.rcJ());
+        }
+    }
+    double eps = 0.5;
+    //Apply explicit relaxation
+    for (int h = 0; h < (int) surfaces_.size(); h++){
+        VortexLattice &vl = surfaces_[h]->getVortexLattice();
+        VortexLattice &vlold = originalSurfaces[h].getVortexLattice();
+        if (surfaces_[h]->freeWake()){
+            for( int i = 0; i < vl.ni(); i++ ){
+                for( int j = 0; j < vl.nj(); j++ ){
+                    vl.endPoints()[i][j] = (eps) * vl.endPoints()[i][j] + (1.0-eps) * vlold.endPoints()[i][j];
+                }
+            }
         }
     }
     dt_ = dt;
     advectWake();
     fillWakeBC();
+    
+    //Apply explicit relaxation
+    for (int h = 0; h < (int) surfaces_.size(); h++){
+        VortexLattice &vl = surfaces_[h]->getVortexLattice();
+        VortexLattice &vlold = originalSurfaces[h].getVortexLattice();
+        if (surfaces_[h]->freeWake()){
+            for( int i = 0; i < vl.ni(); i++ ){
+                for( int j = 0; j < vl.nj(); j++ ){
+                    vl.endPoints()[i][j] = (eps) * vl.endPoints()[i][j] + (1.0-eps) * vlold.endPoints()[i][j];
+                }
+            }
+        }
+    }
+    
 }
 
  
@@ -355,8 +384,12 @@ int SimulationManager::getNSurfaces(){
 }
 
 Vec3D SimulationManager::vInfinity( Vec3D p ){
-    Vec3D vInf = globalLinearVelocity_;  
-    vInf += globalRotationRate_ * globalRotationAxis_.cross(p);
+    Vec3D vInf = globalLinearVelocity_; 
+    //Vec3d vRot = globablRotationRate_ * globalRotationAxis_.cross(p);
+    if( fabs(globalRotationRate_) > 0.0 ){
+        Vec3D vRot1 = globalRotationRate_ * globalRotationAxis_.cross( p.rotate( Vec3D(0.0, 0.0, 0.0), globalRotationAxis_, globalRotationRate_*dt_*2.0 ) );
+        vInf += vRot1;
+    }
     return vInf;
 }
 

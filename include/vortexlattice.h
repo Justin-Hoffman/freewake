@@ -22,6 +22,8 @@ class VortexLattice : public VortexContainer{
         std::vector< std::vector<Vec3D> >& endPointVelocity();
         std::vector< std::vector<double> >& gammaI();
         std::vector< std::vector<double> >& gammaJ();
+        std::vector< std::vector<double> >& rcI();
+        std::vector< std::vector<double> >& rcJ();
 
         void fixToTrailingEdge( HorseshoeLattice &h );
         void advect( double dt );

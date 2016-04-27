@@ -10,7 +10,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         sm.setReferenceVelocity( 1.0 );
         sm.setDt( 0.02 );
         sm.setReferenceSurface( ReferenceSurface( 10.0, 10.0, 1.0) );
-        LiftingSurface ls = LiftingSurface(10,5,35);
+        LiftingSurface ls = LiftingSurface(6,4,80);
         ls.setFreeWake( true );
         ls.setAspectRatio( 4.75 );
         ls.setPitch( 5.0 * M_PI / 180.0 );
@@ -28,7 +28,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         sm.setGlobalRotationRate( 2.0*M_PI );
         int nStep = 0;
        // mexprintf("Solve\n");
-        while ( nStep < 200 ){
+        while ( nStep < 250 ){
             sm.step();
             nStep++; 
         }
