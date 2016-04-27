@@ -57,13 +57,31 @@ Vec3D SimulationManager::getGlobalLinearVelocity(){
 }
 
 void SimulationManager::step(){
-    //printf("Solve\n");
+    double dt = dt_;
+    std::vector< LiftingSurface > originalSurfaces = std::vector< LiftingSurface >();
+    for (int h = 0; h < (int) surfaces_.size(); h++){
+        originalSurfaces.emplace_back( *surfaces_[h] );
+    }
+    dt_ = dt/2.0;
+
+    //Do half time step for first part of RK2::
     solve();
-    //printf("Calculate Wake Velocities\n");
     calculateWakeVelocities();
-    //printf("Advect Wake\n");
     advectWake();
-    //printf("Fill Wake BC\n");
+    fillWakeBC();
+    
+    solve();
+    calculateWakeVelocities();
+    //Reset X,Y,Z, but use new wake velocity
+    for (int h = 0; h < (int) surfaces_.size(); h++){
+        VortexLattice &vl = surfaces_[h]->getVortexLattice();
+        VortexLattice &vlold = originalSurfaces[h].getVortexLattice();
+        if (surfaces_[h]->freeWake()){
+            vl.endPoints() = std::move(vlold.endPoints());
+        }
+    }
+    dt_ = dt;
+    advectWake();
     fillWakeBC();
 }
 
