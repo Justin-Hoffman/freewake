@@ -7,6 +7,8 @@
 #include "vec3d.h"
 #include "vortexcontainer.h"
 
+enum PointSpacing { Linear, Cosine, HalfCosine };
+
 class HorseshoeLattice : public VortexContainer{
     public: 
         HorseshoeLattice();
@@ -19,7 +21,9 @@ class HorseshoeLattice : public VortexContainer{
        
         bool hasTrailers();
         Vec3D trailerVec();
-        
+       
+        PointSpacing chordwiseSpacing();
+        PointSpacing spanwiseSpacing();
         std::vector< std::vector<Vec3D> >& getEndPoints();
         std::vector< std::vector<Vec3D> >& getControlPoints();
         std::vector< std::vector<Vec3D> >& getControlPointNormals();
@@ -40,10 +44,12 @@ class HorseshoeLattice : public VortexContainer{
         Vec3D gammaCenterPoint(int i, int j);
        
         void centerControlPoints(); 
+        void chordwiseSpacing( PointSpacing );
+        void spanwiseSpacing( PointSpacing );
         void flipTip( double dihedralBreak, double dihedral);  
         void setHasTrailers( bool b );
         void setTrailerVec( Vec3D v );
-        void snapToUnit(); 
+        void snapToUnit();
         void snapToAspectTaper( double ar, double taper ); 
         void snapToAspectTaperSweep( double ar, double taper, double Sweep ); 
         void printState();
@@ -56,6 +62,8 @@ class HorseshoeLattice : public VortexContainer{
         double rc_;
         int ni_;
         int nj_;
+        PointSpacing chordwiseSpacing_;
+        PointSpacing spanwiseSpacing_;
         bool hasTrailers_;
         Vec3D trailerVec_;
 

@@ -15,10 +15,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         sm.setReferenceVelocity( omega * r );
         sm.setDt( dt );
         sm.setReferenceSurface( ReferenceSurface( refA, r, c) );
-        LiftingSurface ls = LiftingSurface(12,5,200);
+        LiftingSurface ls = LiftingSurface(12,5,100);
         ls.setFreeWake( true );
         ls.setAspectRatio( 5.25 );
         ls.setPitch( 5.0 * M_PI / 180.0 );
+        ls.getHorseshoeLattice().spanwiseSpacing(PointSpacing::HalfCosine);
         ls.getHorseshoeLattice().setHasTrailers(false); 
         ls.updateLattice( );
         ls.getHorseshoeLattice().translate( Vec3D(0.0, 0.75, 0.0) );

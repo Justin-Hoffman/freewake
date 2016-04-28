@@ -3,7 +3,8 @@
 #include "vortexmath.h"
 #include "stdio.h"
 
-HorseshoeLattice::HorseshoeLattice() : rc_(1E-6), ni_( 1 ), nj_( 1 ), hasTrailers_( false ), trailerVec_( 0.0, 0.0, 0.0 ), 
+HorseshoeLattice::HorseshoeLattice() : rc_(1E-6), ni_( 1 ), nj_( 1 ), chordwiseSpacing_( PointSpacing::Linear ), spanwiseSpacing_(PointSpacing::Linear), 
+                                 hasTrailers_( false ), trailerVec_( 0.0, 0.0, 0.0 ), 
                                  endPoints( 2, std::vector<Vec3D>( 2, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  controlPoints( 1, std::vector<Vec3D>( 1, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  controlPointNormals( 1, std::vector<Vec3D>( 1, Vec3D(0.0, 0.0, 1.0) ) ), 
@@ -13,7 +14,8 @@ HorseshoeLattice::HorseshoeLattice() : rc_(1E-6), ni_( 1 ), nj_( 1 ), hasTrailer
 }
 
 HorseshoeLattice::HorseshoeLattice( int ni, int nj ) : 
-                                 rc_(1E-6), ni_( ni ), nj_( nj ), hasTrailers_( false ), trailerVec_( 0.0, 0.0, 0.0 ),
+                                 rc_(1E-6), ni_( ni ), nj_( nj ), chordwiseSpacing_( PointSpacing::Linear ), spanwiseSpacing_(PointSpacing::Linear), 
+                                 hasTrailers_( false ), trailerVec_( 0.0, 0.0, 0.0 ),
                                  endPoints( ni+1, std::vector<Vec3D>( nj+1, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  controlPoints( ni, std::vector<Vec3D>( nj, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  controlPointNormals( ni, std::vector<Vec3D>( nj, Vec3D(0.0, 0.0, 1.0) ) ), 
@@ -23,7 +25,8 @@ HorseshoeLattice::HorseshoeLattice( int ni, int nj ) :
 }
 
 HorseshoeLattice::HorseshoeLattice( const HorseshoeLattice &v ) : 
-                                 rc_(v.rc_),ni_( v.ni_ ), nj_( v.nj_ ), hasTrailers_( v.hasTrailers_ ),  trailerVec_(v.trailerVec_),
+                                 rc_(v.rc_),ni_( v.ni_ ), nj_( v.nj_ ), chordwiseSpacing_( v.chordwiseSpacing_ ), spanwiseSpacing_( v.spanwiseSpacing_ ), 
+                                 hasTrailers_( v.hasTrailers_ ),  trailerVec_(v.trailerVec_),
                                  endPoints( v.endPoints ),
                                  controlPoints( v.controlPoints ),
                                  controlPointNormals( v.controlPointNormals ),
@@ -155,15 +158,35 @@ void HorseshoeLattice::snapToAspectTaper( double ar, double taper ){
 
 void HorseshoeLattice::snapToAspectTaperSweep( double ar, double taper, double sweep ){
     double cr = 1.0, ct = cr*taper, cbar = (cr+ct)/2.0, b = ar*cbar, cLocal; //s = b*cbar
+    
+    std::vector<double> span_loc = std::vector<double>(ni_+1, 0.0);
+    std::vector<double> chord_loc = std::vector<double>(nj_+1, 0.0);
+    switch (spanwiseSpacing_){
+        case PointSpacing::Linear :
+            for(int i = 1; i < ni_+1; i++){ 
+                span_loc[i] = (double) i * b / ((double) ni_); 
+            }
+            break;
+        case PointSpacing::Cosine :
+            for(int i = 1; i < ni_+1; i++){ 
+                span_loc[i] = ( cos( M_PI -  (double) i * M_PI / ((double) ni_) ) + 1.0 ) * b/2.0;
+            }
+            break;
+        case PointSpacing::HalfCosine :
+            for(int i = 1; i < ni_+1; i++){ 
+                span_loc[i] = ( cos( M_PI/2.0 - (double) i * M_PI / (2.0 * (double) ni_) ) ) * b;
+            }
+            break;
+    }
+
+
     Vec3D dy = Vec3D( 0.0                , b/(double)( ni_ ), 0.0);
     Vec3D dx = Vec3D(-1.0/(double)( nj_ ), 0.0              , 0.0);
     double xLe;
     for (int i = 0; i < ni_+1; i++){
-        if (i > 0){
-            endPoints[i][0] = endPoints[i-1][0] + dy;
-        } else {
-            endPoints[i][0] = Vec3D(0.0, 0.0, 0.0);
-        }
+            
+        endPoints[i][0] = Vec3D(0.0, span_loc[i], 0.0);
+
         cLocal = cr - (cr-ct)*endPoints[i][0].y/b;
         xLe =  cLocal/4.0 - endPoints[i][0].y*tan(sweep);
         dx.x = -cLocal/(double)( nj_ );
@@ -298,6 +321,22 @@ int HorseshoeLattice::ni(){
 
 int HorseshoeLattice::nj(){
     return nj_;
+}
+
+PointSpacing HorseshoeLattice::chordwiseSpacing(){
+    return chordwiseSpacing_;
+}
+
+PointSpacing HorseshoeLattice::spanwiseSpacing(){
+    return spanwiseSpacing_;
+}
+
+void HorseshoeLattice::chordwiseSpacing( PointSpacing ps ){
+    chordwiseSpacing_ = ps;
+}
+
+void HorseshoeLattice::spanwiseSpacing( PointSpacing ps ){
+    spanwiseSpacing_ = ps;
 }
 
 std::vector<std::vector<Vec3D>>& HorseshoeLattice::getEndPoints(){

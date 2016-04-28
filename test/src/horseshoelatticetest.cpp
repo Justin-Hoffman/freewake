@@ -68,6 +68,27 @@ TEST_F(HorseshoeLatticeTest, TestIJToN){
         }
     }
 }
+
+TEST_F(HorseshoeLatticeTest, TestSpanwiseCosineSpacing){
+    vl->spanwiseSpacing(PointSpacing::Cosine);
+    vl->snapToAspectTaper( 4.0, 1.0);
+    EXPECT_DOUBLE_EQ( 0.0000000000000000, vl->getEndPoints()[0][0].y );
+    EXPECT_DOUBLE_EQ( 0.5857864376269051, vl->getEndPoints()[1][0].y );
+    EXPECT_DOUBLE_EQ( 2.0000000000000000, vl->getEndPoints()[2][0].y );
+    EXPECT_DOUBLE_EQ( 3.4142135623730950, vl->getEndPoints()[3][0].y );
+    EXPECT_DOUBLE_EQ( 4.0000000000000000, vl->getEndPoints()[4][0].y );
+}
+
+TEST_F(HorseshoeLatticeTest, TestSpanwiseHalfCosineSpacing){
+    vl->spanwiseSpacing(PointSpacing::HalfCosine);
+    vl->snapToAspectTaper( 4.0, 1.0);
+    EXPECT_DOUBLE_EQ( 0.0000000000000000, vl->getEndPoints()[0][0].y );
+    EXPECT_DOUBLE_EQ( 1.5307337294603593, vl->getEndPoints()[1][0].y );
+    EXPECT_DOUBLE_EQ( 2.8284271247461903, vl->getEndPoints()[2][0].y );
+    EXPECT_DOUBLE_EQ( 3.6955181300451470, vl->getEndPoints()[3][0].y );
+    EXPECT_DOUBLE_EQ( 4.0000000000000000, vl->getEndPoints()[4][0].y );
+}
+
 TEST_F(HorseshoeLatticeTest, TestSnapToArTaper){
     vl->snapToAspectTaper( 4.0/0.75, .5);
     double y[5] =      {0.0,     1.0,     2.0,     3.0,     4.0};
