@@ -68,18 +68,23 @@ void SimulationManager::step(){
     solve();
     calculateWakeVelocities();
     advectWake();
-    fillWakeBC();
+    //fillWakeBC();
     calculateWakeVelocities();
     //Reset X,Y,Z,Gamma, but use new wake velocity
     for (int h = 0; h < (int) surfaces_.size(); h++){
         VortexLattice &vl = surfaces_[h]->getVortexLattice();
         VortexLattice &vlold = originalSurfaces[h].getVortexLattice();
+        TipFilament &tv = surfaces_[h]->getTipFilament();
+        TipFilament &tvold = originalSurfaces[h].getTipFilament();
         if (surfaces_[h]->freeWake()){
             vl.endPoints() = std::vector<std::vector<Vec3D> >(vlold.endPoints());
             vl.gammaI() = std::vector<std::vector< double > >(vlold.gammaI());
             vl.gammaJ() = std::vector<std::vector< double > >(vlold.gammaJ());
             vl.rcI() = std::vector<std::vector< double > >(vlold.rcI());
             vl.rcJ() = std::vector<std::vector< double > >(vlold.rcJ());
+            tv.endPoints() = std::vector<std::vector<Vec3D> >(tvold.endPoints());
+            tv.gamma() = std::vector<std::vector<double> >(tvold.gamma());
+            tv.rc() = std::vector<std::vector<double> >(tvold.rc());
         }
     }
     double eps = .7;
@@ -87,10 +92,17 @@ void SimulationManager::step(){
     for (int h = 0; h < (int) surfaces_.size(); h++){
         VortexLattice &vl = surfaces_[h]->getVortexLattice();
         VortexLattice &vlold = originalSurfaces[h].getVortexLattice();
+        TipFilament &tv = surfaces_[h]->getTipFilament();
+        TipFilament &tvold = originalSurfaces[h].getTipFilament();
         if (surfaces_[h]->freeWake()){
             for( int i = 0; i < vl.ni(); i++ ){
                 for( int j = 0; j < vl.nj(); j++ ){
                     vl.endPoints()[i][j] = (eps) * vl.endPoints()[i][j] + (1.0-eps) * vlold.endPoints()[i][j];
+                }
+            }
+            for(int i = 0; i < 2; i++){
+                for(int j = 0; j< tv.nj(); j++){
+                    tv.endPoints()[i][j] = (eps) * tv.endPoints()[i][j] + (1.0-eps) * tvold.endPoints()[i][j];
                 }
             }
         }
@@ -103,10 +115,17 @@ void SimulationManager::step(){
     for (int h = 0; h < (int) surfaces_.size(); h++){
         VortexLattice &vl = surfaces_[h]->getVortexLattice();
         VortexLattice &vlold = originalSurfaces[h].getVortexLattice();
+        TipFilament &tv = surfaces_[h]->getTipFilament();
+        TipFilament &tvold = originalSurfaces[h].getTipFilament();
         if (surfaces_[h]->freeWake()){
             for( int i = 0; i < vl.ni(); i++ ){
                 for( int j = 0; j < vl.nj(); j++ ){
                     vl.endPoints()[i][j] = (eps) * vl.endPoints()[i][j] + (1.0-eps) * vlold.endPoints()[i][j];
+                }
+            }
+            for(int i = 0; i < 2; i++){
+                for(int j = 0; j< tv.nj(); j++){
+                    tv.endPoints()[i][j] = (eps) * tv.endPoints()[i][j] + (1.0-eps) * tvold.endPoints()[i][j];
                 }
             }
         }
@@ -190,6 +209,10 @@ void SimulationManager::fillRHS( double* b ){
                         if ( sj->freeWake() ){
                             VortexLattice& vlj = sj->getVortexLattice();
                             b[ni] -= vlj.calcInducedVelocity( cpi ).dot( cpni );
+                        }
+                        if ( sj->freeTipVortex() ){
+                            TipFilament& tf = sj->getTipFilament();
+                            b[ni] -= tf.calcInducedVelocity( cpi ).dot( cpni );
                         }
                     }//hj
                 }//ji
@@ -298,7 +321,6 @@ void SimulationManager::calculateWakeVelocities(){
             for(int i = 0; i < s->nSpan()+1; i++){ 
                 for(int j = 0; j < s->nWake(); j++){ 
                     Vec3D thisEndPoint = vl.endPoints()[i][j];
-                    //thisEndPoint.printState();
                     Vec3D vInduced = Vec3D();
                     //Iterate through all other surfaces to find net induced velocity 
                     for( int hj = 0; hj < (int) surfaces_.size(); hj++ ){
@@ -308,6 +330,24 @@ void SimulationManager::calculateWakeVelocities(){
                     //Vec3D vInf  = vInfinity( thisEndPoint );
                     Vec3D vInf  = vInfinityLinearOnly();
                     vl.endPointVelocity()[i][j] = vInduced + vInf;
+                }
+            }
+        }
+        if  ( s->freeTipVortex() ){ //If surface has a free tip filament we need to calculate wake velocity
+            TipFilament& tf = s->getTipFilament();
+            //For two tip vortex filaments
+            for(int i = 0; i < 2; i++){ 
+                for(int j = 0; j < s->nFilament(); j++){ 
+                    Vec3D thisEndPoint = tf.endPoints()[i][j];
+                    Vec3D vInduced = Vec3D();
+                    //Iterate through all other surfaces to find net induced velocity 
+                    for( int hj = 0; hj < (int) surfaces_.size(); hj++ ){
+                        LiftingSurface* sj = surfaces_[hj];
+                        if (j > 0) vInduced += sj->calcInducedVelocity( thisEndPoint );
+                    }//hj
+                    //Vec3D vInf  = vInfinity( thisEndPoint );
+                    Vec3D vInf  = vInfinityLinearOnly();
+                    tf.endPointVelocity()[i][j] = vInduced + vInf;
                 }
             }
         }
@@ -322,6 +362,8 @@ void SimulationManager::advectWake(){
             VortexLattice& vl = s->getVortexLattice();
             //vl.advect( dt_ );
             vl.advectAndRotate( dt_, globalRotationAxis_, globalRotationRate_ );
+            TipFilament& tf = s->getTipFilament();
+            tf.advectAndRotate( dt_, globalRotationAxis_, globalRotationRate_ );
         }
     }
 }
@@ -344,6 +386,8 @@ void SimulationManager::fillWakeBC(){
                     vl.gammaJ()[i][0] = -lastGamma_[h][i];
                 }
             }
+            TipFilament& tf = s->getTipFilament();
+            tf.fixToWake( vl );
         }
     }
 }

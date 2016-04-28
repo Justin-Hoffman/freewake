@@ -32,6 +32,7 @@ CPP_SRC_FILES = \
 ./src/horseshoelattice.cpp\
 ./src/liftingsurface.cpp\
 ./src/simulationmanager.cpp\
+./src/tipfilament.cpp\
 ./src/vec3d.cpp\
 ./src/vortexlattice.cpp\
 ./src/vortexmath.cpp\
@@ -67,7 +68,7 @@ obj/%.o: src/%.cpp
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(INC) -c -o $@ $<
 
 libfreewake.so: obj/liftingsurface.o obj/horseshoelattice.o obj/simulationmanager.o obj/vec3d.o obj/vortexlattice.o obj/vortexmath.o
-	$(CPP) ./obj/liftingsurface.o ./obj/horseshoelattice.o ./obj/simulationmanager.o ./obj/vec3d.o ./obj/vortexlattice.o ./obj/vortexmath.o  $(CPPFLAGS) $(INC) $(LDFLAGS) -o ./libs/libfreewake.so 
+	$(CPP) $(CPP_OBJ_FILES) $(CPPFLAGS) $(INC) $(LDFLAGS) -o ./libs/libfreewake.so 
 
 check: 
 	./test/allTests

@@ -8,9 +8,10 @@ function plotState(surfs)
         for n = 1:nSurfs
            sSurf = size(surfs(n).xSurface);
            sWake = size(surfs(n).xWake);
+           sFilaments = size(surfs(n).xTipFilament);
            N_span = sSurf(1);
-           N_chord = sSurf(2);
            N_wake = sWake(2);
+           N_fil = sFilaments(2);
 %            for i = 1:N_span
 %               plot3(surfs(n).xSurface(i,:),...
 %                     -surfs(n).ySurface(i,:),...
@@ -25,19 +26,14 @@ function plotState(surfs)
             set(hSurface,'FaceColor',[.5 .5 .5],'FaceAlpha',0.9);
             hSurface = surf(surfs(n).xWake,-surfs(n).yWake,-surfs(n).zWake);
             set(hSurface,'FaceColor',cWake{n},'FaceAlpha',0.2);
-%            for i = 1:N_span
-%               plot3(surfs(n).xWake(i,:),...
-%                     -surfs(n).yWake(i,:),...
-%                     -surfs(n).zWake(i,:), cWake{n} )
-%            end
-%            for j = 1:N_wake
-%               plot3(surfs(n).xWake(:,j),...
-%                     -surfs(n).yWake(:,j),...
-%                     -surfs(n).zWake(:,j), cWake{n} )
-%            end
+           for i = 1:2
+              plot3(surfs(n).xTipFilament(i,:),...
+                    -surfs(n).yTipFilament(i,:),...
+                    -surfs(n).zTipFilament(i,:), cWake{n} )
+           end
         end
         axis equal;
-        view([0,1,.1]);
+        view([1,0,.1]);
         drawnow;
             
         figure(102); clf; hold all;

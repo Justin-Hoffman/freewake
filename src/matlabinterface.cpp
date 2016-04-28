@@ -15,8 +15,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         sm.setReferenceVelocity( omega * r );
         sm.setDt( dt );
         sm.setReferenceSurface( ReferenceSurface( refA, r, c) );
-        LiftingSurface ls = LiftingSurface(15,5,60);
+        LiftingSurface ls = LiftingSurface(15,5,10,200);
         ls.setFreeWake( true );
+        ls.setFreeTipVortex( true );
         ls.setAspectRatio( 5.25 );
         ls.setPitch( 5.0 * M_PI / 180.0 );
         ls.getHorseshoeLattice().spanwiseSpacing(PointSpacing::HalfCosine);
@@ -25,12 +26,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         ls.getHorseshoeLattice().translate( Vec3D(0.0, 0.75, 0.0) );
         ls.getVortexLattice().fixToTrailingEdge( ls.getHorseshoeLattice() );
         ls.getVortexLattice().initializeToHelix( Vec3D(0.0, 0.0, 1.0), (omega)*sm.dt(), -0.03 );
+        ls.getTipFilament().fixToWake( ls.getVortexLattice() );
+        ls.getTipFilament().initializeToHelix( Vec3D(0.0, 0.0, 1.0), (omega)*sm.dt(), -0.03 );
 
         LiftingSurface ls2 = LiftingSurface(ls);
         ls2.setFreeWake( true );
+        ls.setFreeTipVortex( true );
         ls2.getHorseshoeLattice().rotate(  Vec3D(0.0,0.0,0.0), Vec3D(0.0, 0.0, -1.0), M_PI );
         ls2.getVortexLattice().fixToTrailingEdge( ls2.getHorseshoeLattice() );
         ls2.getVortexLattice().initializeToHelix( Vec3D(0.0, 0.0, 1.0), (omega)*sm.dt(), -0.03 );
+        ls2.getTipFilament().fixToWake( ls2.getVortexLattice() );
+        ls2.getTipFilament().initializeToHelix( Vec3D(0.0, 0.0, 1.0), (omega)*sm.dt(), -0.03 );
         
         
         sm.addSurface(&ls);
@@ -40,9 +46,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         sm.setGlobalRotationRate( omega );
         
         int nt = 1000;
-        int nFields = 14;
+        int nFields = 17;
         int nSurfaces = sm.getNSurfaces();
-        const char* fieldNames[] = {"xSurface","ySurface","zSurface","xWake","yWake", "zWake","xCp","yCp","zCp", "xSpanwiseForce", "ySpanwiseForce", "zSpanwiseForce", "CT", "T"}; 
+        const char* fieldNames[] = {"xSurface","ySurface","zSurface","xWake","yWake", "zWake","xCp","yCp","zCp","xTipFilament","yTipFilament", "zTipFilament", "xSpanwiseForce", "ySpanwiseForce", "zSpanwiseForce", "CT", "T"}; 
         plhs[0] = mxCreateStructMatrix(1, nSurfaces , nFields, fieldNames);
         mxArray** xsurf = (mxArray**) malloc( nSurfaces * sizeof( mxArray* ) );
         mxArray** ysurf = (mxArray**) malloc( nSurfaces * sizeof( mxArray* ) );
@@ -53,6 +59,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         mxArray** xcp   = (mxArray**) malloc( nSurfaces * sizeof( mxArray* ) );
         mxArray** ycp   = (mxArray**) malloc( nSurfaces * sizeof( mxArray* ) );
         mxArray** zcp   = (mxArray**) malloc( nSurfaces * sizeof( mxArray* ) );
+        mxArray** xtf   = (mxArray**) malloc( nSurfaces * sizeof( mxArray* ) );
+        mxArray** ytf   = (mxArray**) malloc( nSurfaces * sizeof( mxArray* ) );
+        mxArray** ztf   = (mxArray**) malloc( nSurfaces * sizeof( mxArray* ) );
         mxArray** xspfc = (mxArray**) malloc( nSurfaces * sizeof( mxArray* ) );
         mxArray** yspfc = (mxArray**) malloc( nSurfaces * sizeof( mxArray* ) );
         mxArray** zspfc = (mxArray**) malloc( nSurfaces * sizeof( mxArray* ) );
@@ -64,6 +73,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         for(int iSurface = 0; iSurface < nSurfaces; iSurface++){
             LiftingSurface &l = sm.getSurface( iSurface );
             HorseshoeLattice &hl = l.getHorseshoeLattice();  
+            TipFilament &tf      = l.getTipFilament();  
             //Fill endpoint matrices
             int ni = hl.ni()+1;
             int nj = hl.nj()+1;
@@ -83,6 +93,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
             xcp[iSurface] = mxCreateDoubleMatrix(ni,nj, mxREAL);
             ycp[iSurface] = mxCreateDoubleMatrix(ni,nj, mxREAL);
             zcp[iSurface] = mxCreateDoubleMatrix(ni,nj, mxREAL);
+            
+            ni = tf.ni();
+            nj = tf.nj();
+            xtf[iSurface] = mxCreateDoubleMatrix(ni,nj, mxREAL);
+            ytf[iSurface] = mxCreateDoubleMatrix(ni,nj, mxREAL);
+            ztf[iSurface] = mxCreateDoubleMatrix(ni,nj, mxREAL);
+
 
             ni = hl.ni();
             nj = hl.nj();
@@ -162,7 +179,26 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
                     mxSetFieldByNumber(plhs[0],iSurface,6,xcp[iSurface]);
                     mxSetFieldByNumber(plhs[0],iSurface,7,ycp[iSurface]);
                     mxSetFieldByNumber(plhs[0],iSurface,8,zcp[iSurface]);
-
+                   
+                    //Fill tip vortex filament endpoints
+                    TipFilament &tf      = l.getTipFilament();  
+                    ni = tf.ni();
+                    nj = tf.nj();
+                    x = mxGetPr(xtf[iSurface] );
+                    y = mxGetPr(ytf[iSurface] );
+                    z = mxGetPr(ztf[iSurface] );
+                    for (int i = 0; i<ni; i++){ 
+                        for (int j = 0; j < nj; j++){
+                            int n = j*ni+i;
+                            x[n] = tf.endPoints()[i][j].x;
+                            y[n] = tf.endPoints()[i][j].y;
+                            z[n] = tf.endPoints()[i][j].z;
+                        }
+                    }
+                    mxSetFieldByNumber(plhs[0],iSurface,9 ,xtf[iSurface]);
+                    mxSetFieldByNumber(plhs[0],iSurface,10,ytf[iSurface]);
+                    mxSetFieldByNumber(plhs[0],iSurface,11,ztf[iSurface]);
+                 
                     
                     //Fill spanwise force matrices
                     ni = vl.ni();
@@ -175,17 +211,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
                         y[i] = l.spanwiseForce()[i].y;
                         z[i] = l.spanwiseForce()[i].z;
                     }
-                    mxSetFieldByNumber(plhs[0],iSurface,9,xspfc[iSurface]);
-                    mxSetFieldByNumber(plhs[0],iSurface,10,yspfc[iSurface]);
-                    mxSetFieldByNumber(plhs[0],iSurface,11,zspfc[iSurface]);
+                    mxSetFieldByNumber(plhs[0],iSurface,12,xspfc[iSurface]);
+                    mxSetFieldByNumber(plhs[0],iSurface,13,yspfc[iSurface]);
+                    mxSetFieldByNumber(plhs[0],iSurface,14,zspfc[iSurface]);
 
                     
                     double* ctp = mxGetPr( ct[iSurface] );
                     double* tp  = mxGetPr(  t[iSurface] );
                     ctp[nStep]  = sm.forcesAndMoments().bodyForceCoeff.z;
                     tp[nStep ]  = time;
-                    mxSetFieldByNumber(plhs[0],iSurface,12,ct[iSurface]);
-                    mxSetFieldByNumber(plhs[0],iSurface,13, t[iSurface]);
+                    mxSetFieldByNumber(plhs[0],iSurface,15,ct[iSurface]);
+                    mxSetFieldByNumber(plhs[0],iSurface,16, t[iSurface]);
                     
                 } 
                 mexCallMATLAB(0, NULL, 1, plhs, "plotState");
@@ -195,6 +231,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
     free(xsurf); free(ysurf); free(zsurf);    
     free(xwake); free(ywake); free(zwake);    
     free(xcp); free(ycp); free(zcp);    
+    free(xtf); free(ytf); free(ztf);    
     free(xspfc); free(yspfc); free(zspfc);   
     free(ct); free(t); 
 }

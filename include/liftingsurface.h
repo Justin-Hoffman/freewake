@@ -6,6 +6,7 @@
 #include <tuple>
 
 #include "horseshoelattice.h"
+#include "tipfilament.h"
 #include "vortexlattice.h"
 
 class VortexLattice;
@@ -14,13 +15,15 @@ class LiftingSurface{
         LiftingSurface();         //!< 
         LiftingSurface( const LiftingSurface& );         //!< 
         LiftingSurface( int nSpan, int nChord );         //!< 
-        LiftingSurface( int nSpan, int nChord, int nWake );         //!< 
+        LiftingSurface( int nSpan, int nChord, int nWake, int nFilament );         //!< 
         ~LiftingSurface();        //!< 
         
         HorseshoeLattice& getHorseshoeLattice();
         VortexLattice& getVortexLattice();
+        TipFilament& getTipFilament();
         
         bool freeWake();   
+        bool freeTipVortex();   
      
         double getAspectRatio();
         double getSpan();
@@ -39,8 +42,10 @@ class LiftingSurface{
         int nSpan();
         int nChord();
         int nWake();
+        int nFilament();
         
         void setFreeWake( bool );   
+        void setFreeTipVortex( bool );   
 
         void setAspectRatio( double );
         void setSpan( double );
@@ -57,6 +62,7 @@ class LiftingSurface{
                
     private:
         bool freeWake_;
+        bool freeTipVortex_;
         double span_;
         double sweep_;
         double pitch_;
@@ -69,11 +75,13 @@ class LiftingSurface{
         int nSpan_;
         int nChord_;
         int nWake_;
+        int nFilament_;
         
         std::vector< Vec3D > spanwiseForce_;
         
         HorseshoeLattice horseshoeLattice_;    
         VortexLattice vortexLattice_;    
+        TipFilament tipFilament_;    
 };
 
 struct ReferenceSurface {

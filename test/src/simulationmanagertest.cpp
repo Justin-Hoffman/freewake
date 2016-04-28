@@ -163,7 +163,7 @@ TEST_F(SimulationManagerTest, TestFreeWake){
     sm->setReferenceVelocity( 100.0 );
     sm->setDt( 0.1 );
     sm->setReferenceSurface( ReferenceSurface( 10.0, 10.0, 1.0) );
-    LiftingSurface ls = LiftingSurface(10,1,10);
+    LiftingSurface ls = LiftingSurface(10,1,10,2);
     ls.setFreeWake( true );
     ls.setAspectRatio( 10.0 );
     ls.setPitch( 0.0 * M_PI / 180.0 );
