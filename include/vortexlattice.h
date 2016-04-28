@@ -27,6 +27,7 @@ class VortexLattice : public VortexContainer{
 
         void fixToTrailingEdge( HorseshoeLattice &h );
         void advect( double dt );
+        void advectAndRotate( double dt, Vec3D axis, double omega );
         void initializeToHelix( Vec3D axis, double dTheta, double dZ );
         void printState();
         

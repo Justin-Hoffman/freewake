@@ -82,7 +82,7 @@ void SimulationManager::step(){
             vl.rcJ() = std::vector<std::vector< double > >(vlold.rcJ());
         }
     }
-    double eps = .5;
+    double eps = .7;
     //Apply explicit relaxation
     for (int h = 0; h < (int) surfaces_.size(); h++){
         VortexLattice &vl = surfaces_[h]->getVortexLattice();
@@ -305,7 +305,8 @@ void SimulationManager::calculateWakeVelocities(){
                         LiftingSurface* sj = surfaces_[hj];
                         if (j > 0) vInduced += sj->calcInducedVelocity( thisEndPoint );
                     }//hj
-                    Vec3D vInf  = vInfinity( thisEndPoint );
+                    //Vec3D vInf  = vInfinity( thisEndPoint );
+                    Vec3D vInf  = vInfinityLinearOnly();
                     vl.endPointVelocity()[i][j] = vInduced + vInf;
                 }
             }
@@ -319,7 +320,8 @@ void SimulationManager::advectWake(){
         LiftingSurface* s = surfaces_[h];
         if  ( s->freeWake() ){ //If surface is a free wake case we need to calculate wake velocity
             VortexLattice& vl = s->getVortexLattice();
-            vl.advect( dt_ );
+            //vl.advect( dt_ );
+            vl.advectAndRotate( dt_, globalRotationAxis_, globalRotationRate_ );
         }
     }
 }
@@ -397,6 +399,11 @@ Vec3D SimulationManager::vInfinity( Vec3D p ){
         Vec3D vRot1 = globalRotationRate_ * globalRotationAxis_.cross( p.rotate( Vec3D(0.0, 0.0, 0.0), globalRotationAxis_, globalRotationRate_*dt_*2.0 ) );
         vInf += vRot1;
     }
+    return vInf;
+}
+
+Vec3D SimulationManager::vInfinityLinearOnly(){
+    Vec3D vInf = globalLinearVelocity_; 
     return vInf;
 }
 

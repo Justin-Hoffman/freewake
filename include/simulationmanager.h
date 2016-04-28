@@ -79,6 +79,7 @@ class SimulationManager {
         
         
         Vec3D vInfinity( Vec3D p );
+        Vec3D vInfinityLinearOnly();
 };
 
 #endif

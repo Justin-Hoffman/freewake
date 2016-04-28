@@ -6,7 +6,7 @@ extern void _main();
 extern "C"
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){ 
         double omega = 176.0; //Roughly mach 0.6 for a 7.5 ft span rotor (Caradonna Tung Rotor)
-        double dt = 2.0*M_PI/ omega / 50.0;
+        double dt = 2.0*M_PI/ omega / 100.0;
         double r = 6.0; 
         double c = 1.0;
         double refA = M_PI * r * r;
@@ -15,7 +15,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         sm.setReferenceVelocity( omega * r );
         sm.setDt( dt );
         sm.setReferenceSurface( ReferenceSurface( refA, r, c) );
-        LiftingSurface ls = LiftingSurface(12,5,100);
+        LiftingSurface ls = LiftingSurface(15,5,60);
         ls.setFreeWake( true );
         ls.setAspectRatio( 5.25 );
         ls.setPitch( 5.0 * M_PI / 180.0 );
