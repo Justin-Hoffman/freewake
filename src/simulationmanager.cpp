@@ -82,7 +82,7 @@ void SimulationManager::step(){
             vl.rcJ() = std::vector<std::vector< double > >(vlold.rcJ());
         }
     }
-    double eps = 0.5;
+    double eps = .5;
     //Apply explicit relaxation
     for (int h = 0; h < (int) surfaces_.size(); h++){
         VortexLattice &vl = surfaces_[h]->getVortexLattice();
@@ -253,6 +253,7 @@ void SimulationManager::integrateForceAndMoment(){
         LiftingSurface* s = surfaces_[h];
         HorseshoeLattice& hl = s->getHorseshoeLattice();
         for(int i = 0; i < s->nSpan(); i++){
+            Vec3D chordwiseSum = Vec3D();
             for(int j = 0; j < s->nChord(); j++){
                 Vec3D vInduced = Vec3D(0.0, 0.0, 0.0);
                 Vec3D thisGamma = hl.gammaVector(i,j);
@@ -270,7 +271,9 @@ void SimulationManager::integrateForceAndMoment(){
                 Vec3D force = (vInf+vInduced).cross( thisGamma );
                 netForce += force;
                 netMoment += force.cross(thisGammaCenter);
+                chordwiseSum += force;
             }
+            s->spanwiseForce()[i] = chordwiseSum/(hl.dSpan(i,0));
         }
     }
     fomo_.bodyForce = netForce;
@@ -373,6 +376,10 @@ double SimulationManager::referenceVelocity(){
 
 double SimulationManager::dt(){
     return dt_;
+}
+
+ForcesAndMoments SimulationManager::forcesAndMoments(){
+    return fomo_;
 }
 
 LiftingSurface& SimulationManager::getSurface(int i){

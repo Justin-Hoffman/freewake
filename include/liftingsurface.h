@@ -31,6 +31,8 @@ class LiftingSurface{
         double getTaperRatio();
         double getTipDihedral();
         double getTipDihedralBreak();
+
+        std::vector< Vec3D >& spanwiseForce();
         
         Vec3D calcInducedVelocity( Vec3D );
     
@@ -67,6 +69,8 @@ class LiftingSurface{
         int nSpan_;
         int nChord_;
         int nWake_;
+        
+        std::vector< Vec3D > spanwiseForce_;
         
         HorseshoeLattice horseshoeLattice_;    
         VortexLattice vortexLattice_;    

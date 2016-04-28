@@ -226,6 +226,12 @@ double HorseshoeLattice::dSpan(int i, int j){
     return  vn.magnitude();
 }
 
+double HorseshoeLattice::dChord(int i ){
+    //dSpan is length of vector
+    Vec3D v1 = endPoints[i][nj_-1] - endPoints[i][0];
+    return  v1.magnitude();
+}
+
 Vec3D HorseshoeLattice::gammaVector( int i, int j ){
     Vec3D vOut = gamma[i][j] * (   
         (3.0*endPoints[i+1][j  ] +

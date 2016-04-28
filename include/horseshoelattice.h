@@ -35,6 +35,7 @@ class HorseshoeLattice : public VortexContainer{
         int ijToN( int i, int j);
         int maxN();
         double dSpan(int i, int j);
+        double dChord(int i);
         Vec3D gammaVector(int i, int j);
         Vec3D gammaCenterPoint(int i, int j);
        

@@ -1,25 +1,25 @@
 #include "liftingsurface.h"
 
 LiftingSurface::LiftingSurface() : 
-                freeWake_(false), span_( 1.0 ), sweep_( 0.0 ), pitch_(0.0), rootChord_( 1.0 ), tipChord_(1.0), tipDihedral_(0.0), tipDihedralBreak_(0.0), taperRatio_(1.0), nSpan_( 10 ), nChord_( 2 ), nWake_( 2 ),
+                freeWake_(false), span_( 1.0 ), sweep_( 0.0 ), pitch_(0.0), rootChord_( 1.0 ), tipChord_(1.0), tipDihedral_(0.0), tipDihedralBreak_(0.0), taperRatio_(1.0), nSpan_( 10 ), nChord_( 2 ), nWake_( 2 ), spanwiseForce_( 10, Vec3D() ),
                 horseshoeLattice_( nSpan_, nChord_), vortexLattice_( nSpan_+1, nWake_ ) {
     horseshoeLattice_.snapToUnit();
 }
 
 LiftingSurface::LiftingSurface( const LiftingSurface &l) : 
                 freeWake_( false ), span_( l.span_ ), sweep_( l.sweep_ ), pitch_( l.pitch_ ), rootChord_( l.rootChord_ ), tipChord_( l.tipChord_ ), tipDihedral_( l.tipDihedral_ ), 
-                tipDihedralBreak_( l.tipDihedralBreak_ ), taperRatio_( l.taperRatio_ ), nSpan_( l.nSpan_ ), nChord_( l.nChord_ ), nWake_( l.nWake_ ),
+                tipDihedralBreak_( l.tipDihedralBreak_ ), taperRatio_( l.taperRatio_ ), nSpan_( l.nSpan_ ), nChord_( l.nChord_ ), nWake_( l.nWake_ ), spanwiseForce_( l.spanwiseForce_ ),
                 horseshoeLattice_( l.horseshoeLattice_ ), vortexLattice_( l.vortexLattice_ ) {
 }
 
 LiftingSurface::LiftingSurface( int nSpan, int nChord ) :
-                freeWake_( false ), span_( 1.0 ), sweep_( 0.0 ), pitch_(0.0), rootChord_( 1.0 ), tipChord_(1.0), tipDihedral_(0.0), tipDihedralBreak_(0.0), taperRatio_(1.0), nSpan_( nSpan ), nChord_( nChord ), nWake_( 2 ),
+                freeWake_( false ), span_( 1.0 ), sweep_( 0.0 ), pitch_(0.0), rootChord_( 1.0 ), tipChord_(1.0), tipDihedral_(0.0), tipDihedralBreak_(0.0), taperRatio_(1.0), nSpan_( nSpan ), nChord_( nChord ), nWake_( 2 ), spanwiseForce_( nSpan, Vec3D() ),
                 horseshoeLattice_( nSpan_, nChord_ ), vortexLattice_( nSpan_+1, nWake_ ) {
     horseshoeLattice_.snapToUnit();
 }        
 
 LiftingSurface::LiftingSurface( int nSpan, int nChord, int nWake ) :
-                freeWake_( false ), span_( 1.0 ), sweep_( 0.0 ), pitch_(0.0), rootChord_( 1.0 ), tipChord_(1.0), tipDihedral_(0.0), tipDihedralBreak_(0.0), taperRatio_(1.0), nSpan_( nSpan ), nChord_( nChord ), nWake_( nWake ),
+                freeWake_( false ), span_( 1.0 ), sweep_( 0.0 ), pitch_(0.0), rootChord_( 1.0 ), tipChord_(1.0), tipDihedral_(0.0), tipDihedralBreak_(0.0), taperRatio_(1.0), nSpan_( nSpan ), nChord_( nChord ), nWake_( nWake ), spanwiseForce_( nSpan, Vec3D() ),
                 horseshoeLattice_( nSpan_, nChord_ ), vortexLattice_( nSpan_+1, nWake_ ) {
     horseshoeLattice_.snapToUnit();
 }        
@@ -41,6 +41,10 @@ HorseshoeLattice& LiftingSurface::getHorseshoeLattice(){
 
 VortexLattice& LiftingSurface::getVortexLattice(){
     return vortexLattice_;
+}
+
+std::vector<Vec3D>& LiftingSurface::spanwiseForce(){
+    return spanwiseForce_;
 }
 
 int LiftingSurface::nSpan(){
