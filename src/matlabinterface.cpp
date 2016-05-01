@@ -15,7 +15,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         sm.setReferenceVelocity( omega * r );
         sm.setDt( dt );
         sm.setReferenceSurface( ReferenceSurface( refA, r, c) );
-        LiftingSurface ls = LiftingSurface(20,5,90,250);
+        LiftingSurface ls = LiftingSurface(20,5,30,150);
         ls.setFreeWake( true );
         ls.setFreeTipVortex( true );
         ls.setAspectRatio( 5.25 );
@@ -24,6 +24,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         ls.setTipDihedral( 0.0 * M_PI/180.0 );
         ls.setTipDihedralBreak( .9*5.25/6.0 );
         ls.getHorseshoeLattice().spanwiseSpacing(PointSpacing::Cosine);
+        //ls.getHorseshoeLattice().chordwiseSpacing(PointSpacing::Cosine);
         ls.getHorseshoeLattice().setHasTrailers(false); 
         ls.updateLattice( );
         ls.getHorseshoeLattice().translate( Vec3D(0.0, 0.75, 0.0) );

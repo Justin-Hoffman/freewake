@@ -97,6 +97,7 @@ TEST_F(HorseshoeLatticeTest, TestSnapToArTaper){
     double xcp[3] =    {-3.0/12.0, -7.0/12.0, -11.0/12.0};
     double xScale[5] = {8.0/8.0, 7.0/8.0, 6.0/8.0, 5.0/8.0, 4.0/8.0};
     double xLe[5] =    {0.0, -(1.0-7.0/8.0)/4.0, -(1.0-6.0/8.0)/4.0, -(1.0-5.0/8.0)/4.0, -(1.0-4.0/8.0)/4.0};
+    //vl->printState();
     for (int i = 0; i < vl->ni(); i++){
         for (int j = 0; j < vl->nj(); j++){
            //printf("%i, %i\n",i,j);

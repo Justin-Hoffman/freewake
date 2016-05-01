@@ -9,7 +9,7 @@ CPP = g++
 #CPP = icpc
 # Compile-time flags 
 #CFLAGS = -Wall -Weffc++ -fPIC -std=c++11 -mtune=core-avx2 -msse4.2 -mavx2 -mpclmul -march=native -O3 -fprofile-use
-CFLAGS = -Wall -Wextra -Weffc++ -fPIC -std=c++11 -O3 -fopenmp 
+CFLAGS = -Wall -Wextra -Weffc++ -fPIC -std=c++11 -g -O0 -fopenmp 
 CPPFLAGS = -std=c++11 -L./ -lgcov -llapack -llapacke -lm -lgomp
 #CPPFLAGS = -std=c++11 -L ./ -lpthread
 INC = -I ./include -I ./src 

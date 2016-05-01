@@ -178,21 +178,37 @@ void HorseshoeLattice::snapToAspectTaperSweep( double ar, double taper, double s
             }
             break;
     }
+    switch( chordwiseSpacing_ ){
+        case PointSpacing::Linear :
+            for(int j = 1; j < nj_+1; j++){
+                chord_loc[j] = (double) j * 1.0 / ((double) nj_);
+            }
+            break;
+        case PointSpacing::Cosine :
+            for(int j = 1; j < nj_+1; j++){ 
+                chord_loc[j] = ( cos( M_PI -  (double) j * M_PI / ((double) nj_) ) + 1.0 ) * 1.0/2.0;
+            }
+            break;
+        case PointSpacing::HalfCosine :
+            for(int j = 1; j < nj_+1; j++){ 
+                chord_loc[j] = ( cos( M_PI/2.0 - (double) j * M_PI / (2.0 * (double) nj_) ) );
+            }
+            break;
+    }
 
 
     Vec3D dy = Vec3D( 0.0                , b/(double)( ni_ ), 0.0);
     Vec3D dx = Vec3D(-1.0/(double)( nj_ ), 0.0              , 0.0);
     double xLe;
     for (int i = 0; i < ni_+1; i++){
-            
         endPoints[i][0] = Vec3D(0.0, span_loc[i], 0.0);
-
-        cLocal = cr - (cr-ct)*endPoints[i][0].y/b;
-        xLe =  cLocal/4.0 - endPoints[i][0].y*tan(sweep);
-        dx.x = -cLocal/(double)( nj_ );
+        cLocal = cr - (cr-ct)*span_loc[i]/b;
+        xLe =  cLocal/4.0 - span_loc[i]*tan(sweep);
         endPoints[i][0].x = xLe;
         for (int j = 1; j < nj_+1; j++){
-           endPoints[i][j] = endPoints[i][j-1] + dx;
+           endPoints[i][j].x = xLe-chord_loc[j]*cLocal;
+           endPoints[i][j].y = span_loc[i];
+           endPoints[i][j].z =  0.0;
         }
     }
     centerControlPoints();
