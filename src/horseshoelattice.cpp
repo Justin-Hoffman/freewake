@@ -9,6 +9,7 @@ HorseshoeLattice::HorseshoeLattice() : rc_(1E-6), ni_( 1 ), nj_( 1 ), chordwiseS
                                  controlPoints( 1, std::vector<Vec3D>( 1, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  controlPointNormals( 1, std::vector<Vec3D>( 1, Vec3D(0.0, 0.0, 1.0) ) ), 
                                  gamma( 1, std::vector<double>( 1, 0.0  ) ), 
+                                 trailedPoints_( ni_+1, Vec3D()  ),
                                  netGamma_( 1, 0.0 ){
  
 }
@@ -20,6 +21,7 @@ HorseshoeLattice::HorseshoeLattice( int ni, int nj ) :
                                  controlPoints( ni, std::vector<Vec3D>( nj, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  controlPointNormals( ni, std::vector<Vec3D>( nj, Vec3D(0.0, 0.0, 1.0) ) ), 
                                  gamma( ni, std::vector<double>( nj, 0.0  ) ),
+                                 trailedPoints_( ni_+1, Vec3D() ),
                                  netGamma_(ni, 0.0){
  
 }
@@ -31,6 +33,7 @@ HorseshoeLattice::HorseshoeLattice( const HorseshoeLattice &v ) :
                                  controlPoints( v.controlPoints ),
                                  controlPointNormals( v.controlPointNormals ),
                                  gamma( v.gamma ),
+                                 trailedPoints_( v.trailedPoints_ ),
                                  netGamma_( v.netGamma_ ){
  
 }
@@ -73,7 +76,14 @@ Vec3D HorseshoeLattice::calcInfluenceCoefficient( Vec3D p, int n ){
         r1 = endPoints[i+1][nj_]               -p;
         r2 = endPoints[i+1][nj_] + trailerVec_ -p;
         aOut += BiotSavart(r1, r2, rc_); 
-    }
+    } else {
+        r1 = trailedPoints_[i]-p;
+        r2 = endPoints[i][nj_]-p;
+        aOut += BiotSavart(r1, r2, rc_);
+        r1 = endPoints[i+1][nj_]-p;
+        r2 = trailedPoints_[i+1]-p;
+        aOut += BiotSavart(r1, r2, rc_); 
+    } 
     
     //Influence of single spanwise filament
     r1 = (3.0*endPoints[i][jstar]   + 1.0*endPoints[i][jstar+1])/4.0   - p;
@@ -83,7 +93,7 @@ Vec3D HorseshoeLattice::calcInfluenceCoefficient( Vec3D p, int n ){
     return aOut;
 }
 
-Vec3D HorseshoeLattice::calcInducedVelocity( Vec3D p){
+Vec3D HorseshoeLattice::calcInducedVelocity( Vec3D p, int jStart ){
     Vec3D r1, r2, aOut;
     double vx = 0.0, vy = 0.0, vz = 0.0;
     double gammaSum, gammaLocal;
@@ -125,6 +135,14 @@ Vec3D HorseshoeLattice::calcInducedVelocity( Vec3D p){
             r1 = endPoints[i][nj_] + trailerVec_ -p;
             r2 = endPoints[i][nj_]               -p;
             aTmp += BiotSavart(r1, r2, rc_) * gammaSum;
+        } else {
+            double dx = 1.0E12;;
+            if (i < ni_) dx = fmin(dx,(endPoints[i][nj_]-endPoints[i+1][nj_]).magnitude());
+            if (i > 0  ) dx = fmin(dx,(endPoints[i][nj_]-endPoints[i-1][nj_]).magnitude());
+            r1 = trailedPoints_[i]-p;
+            r2 = endPoints[i][nj_]-p;
+            aTmp += BiotSavart(r1, r2, fmax(dx,fmax(rc_,dx)) ) * gammaSum;
+    
         }
         vx += aTmp.x;
         vy += aTmp.y;
@@ -148,6 +166,7 @@ void HorseshoeLattice::snapToUnit(){
         for (int j = 1; j < nj_+1; j++){
            endPoints[i][j] = endPoints[i][j-1] + dx;
         }
+        trailedPoints_[i] = endPoints[i][nj_];
     }
     centerControlPoints();
 }
@@ -210,6 +229,7 @@ void HorseshoeLattice::snapToAspectTaperSweep( double ar, double taper, double s
            endPoints[i][j].y = span_loc[i];
            endPoints[i][j].z =  0.0;
         }
+        trailedPoints_[i] = endPoints[i][nj_];
     }
     centerControlPoints();
 }
@@ -378,6 +398,10 @@ std::vector<std::vector<Vec3D>>& HorseshoeLattice::getControlPointNormals(){
  
 std::vector<std::vector<double>>& HorseshoeLattice::getGamma(){
     return gamma;
+} 
+
+std::vector<Vec3D>& HorseshoeLattice::getTrailedPoints(){
+    return trailedPoints_;
 } 
 
 std::vector<double>& HorseshoeLattice::getNetGamma(){

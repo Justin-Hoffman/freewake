@@ -68,6 +68,12 @@ void SimulationManager::step(){
     solve();
     calculateWakeVelocities();
     advectWake();
+    for (int h = 0; h < (int) surfaces_.size(); h++){
+        LiftingSurface* ls = surfaces_[h];
+        if (ls->freeWake()){
+            ls->getVortexLattice().fixToTrailingEdge( ls->getHorseshoeLattice() );
+        }
+    }
     //fillWakeBC();
     calculateWakeVelocities();
     //Reset X,Y,Z,Gamma, but use new wake velocity
@@ -87,7 +93,7 @@ void SimulationManager::step(){
             tv.rc() = std::vector<std::vector<double> >(tvold.rc());
         }
     }
-    double eps = .5;
+    double eps = 0.9;
     //Apply explicit relaxation
     for (int h = 0; h < (int) surfaces_.size(); h++){
         VortexLattice &vl = surfaces_[h]->getVortexLattice();
@@ -112,6 +118,7 @@ void SimulationManager::step(){
     dt_ = dt;
     advectWake();
     fillWakeBC();
+    //fillWakeBC();
     
     //Apply explicit relaxation
     for (int h = 0; h < (int) surfaces_.size(); h++){
@@ -132,6 +139,12 @@ void SimulationManager::step(){
                     if ( j  < (tv.nj()-1) ) tv.gamma()[i][j] = (eps) * tv.gamma()[i][j] + (1.0-eps) * tvold.gamma()[i][j];
                 }
             }
+        }
+    }
+    for (int h = 0; h < (int) surfaces_.size(); h++){
+        LiftingSurface* ls = surfaces_[h];
+        if (ls->freeWake()){
+            ls->getVortexLattice().fixToTrailingEdge( ls->getHorseshoeLattice() );
         }
     }
     
@@ -212,7 +225,7 @@ void SimulationManager::fillRHS( double* b ){
                         LiftingSurface* sj = surfaces_[hj];
                         if ( sj->freeWake() ){
                             VortexLattice& vlj = sj->getVortexLattice();
-                            b[ni] -= vlj.calcInducedVelocity( cpi ).dot( cpni );
+                            b[ni] -= vlj.calcInducedVelocity( cpi, 1 ).dot( cpni );
                         }
                         if ( sj->freeTipVortex() ){
                             TipFilament& tf = sj->getTipFilament();

@@ -59,13 +59,13 @@ Vec3D VortexLattice::calcInfluenceCoefficient( Vec3D p, int n ){
     return aOut;
 }
 
-Vec3D VortexLattice::calcInducedVelocity( Vec3D p){
+Vec3D VortexLattice::calcInducedVelocity( Vec3D p, int jStart ){
     Vec3D r1, r2, aOut = Vec3D();
     double vx = 0.0, vy = 0.0, vz = 0.0;
     #pragma omp parallel for private( r1, r2) reduction(+:vx,vy,vz)
     for ( int i = 0; i < ni_; i++){
         Vec3D aTmp = Vec3D(0.0, 0.0, 0.0);//Hackery because I can't use openMP reduce on a class
-        for (int j = 0; j < nj_; j++){
+        for (int j = jStart; j < nj_; j++){
             if (i < ni_-1) {
                 //Contribution of spanwise (i) edge filaments
                 r1 = (endPoints_[i  ][j] - p);
@@ -90,7 +90,7 @@ Vec3D VortexLattice::calcInducedVelocity( Vec3D p){
 void VortexLattice::advect( double dt ){
     for ( int i = ni_-1; i > -1; i--){
         for (int j = nj_-1; j > 0; j--){
-            endPoints_[i][j] = endPoints_[i][j-1] + endPointV_[i][j-1]*dt;
+            endPoints_[i][j] = endPoints_[i][j-1] + (endPointV_[i][j-1] + endPointV_[i][j])/2.0*dt;
             if ( i < ni_-1 ){
                 gammaI_[i][j] = gammaI_[i][j-1];
                 rcI_[i][j] = VortexCoreGrowth( rcI_[i][j-1], dt );
@@ -124,6 +124,7 @@ void VortexLattice::fixToTrailingEdge( HorseshoeLattice &h ){
     int maxj = h.nj();
     for ( int i = 0; i < ni_; i++){
         endPoints_[i][0] = h.getEndPoints()[i][maxj];
+        h.getTrailedPoints()[i] = Vec3D(endPoints_[i][1]);
     }
 }
 

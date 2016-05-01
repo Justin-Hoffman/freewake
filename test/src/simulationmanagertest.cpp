@@ -150,7 +150,7 @@ TEST_F(SimulationManagerTest, TestHighARLiftingLine){
     ls.setAspectRatio( 1000.0 );
     double alpha = 5.0* M_PI / 180.0;
     ls.setPitch( alpha );
-    ls.getHorseshoeLattice().setHasTrailers(false);   
+    ls.getHorseshoeLattice().setHasTrailers( true );   
     ls.getHorseshoeLattice().setTrailerVec( Vec3D(-10000.0, 0.0, 0.0) );   
     ls.updateLattice( );
     sm->addSurface(&ls);
@@ -183,7 +183,7 @@ TEST_F(SimulationManagerTest, TestFreeWake){
     for(int i = 0; i < ls.nSpan(); i++){
         for(int j = 0; j < ls.nChord(); j++){
             n++;
-            EXPECT_NEAR( gamma[n], ls.getHorseshoeLattice().getGamma()[i][j], 1E-2);
+            EXPECT_NEAR( gamma[n], ls.getHorseshoeLattice().getGamma()[i][j], 2E-2);
         }
     }
 }
