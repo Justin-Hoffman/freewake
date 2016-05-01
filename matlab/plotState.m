@@ -39,12 +39,28 @@ function plotState(surfs)
         figure(102); clf; hold all;
         for n = 1:nSurfs
             plot(surfs(n).yCp,-surfs(n).zSpanwiseForce)
+            xlabel('Y');
+            ylabel('Sectional Loading');
+            grid on
         end
 
-        figure(103); 
+        figure(103);
+        subplot 311
         hold off
-        plot(surfs(1).T, -surfs(1).CT/2); %Divide by 2 for rotor CT
+        plot(surfs(1).T, -surfs(1).CFZ/2); %Divide by 2 for rotor CT
+        grid on
         xlabel('Time'); ylabel('CT');
+        subplot 312 
+        hold off
+        plot(surfs(1).T, -surfs(1).CMZ/2); %Divide by 2 for rotor CT
+        grid on
+        xlabel('Time'); ylabel('CQ');
+        subplot 313 
+        hold off
+        plot(surfs(1).T, (-surfs(1).CFZ/2).^(3/2)./(sqrt(2)*-surfs(1).CMZ/2)); %Divide by 2 for rotor CT
+        grid on
+        xlabel('Time'); ylabel('FM');
         drawnow;
+
         
     end

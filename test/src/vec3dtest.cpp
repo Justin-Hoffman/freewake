@@ -162,7 +162,7 @@ TEST_F(Vec3DTest, TestNorm){
     Vec3D vNorm = v.norm();
     EXPECT_DOUBLE_EQ(0.1690308509457033, vNorm.x);
     EXPECT_DOUBLE_EQ(0.507092552837110, vNorm.y);
-    EXPECT_DOUBLE_EQ(0.845154254728517, vNorm.z);
+    EXPECT_NEAR     (0.845154254728517, vNorm.z, 1E-15);
 }
 
 TEST_F(Vec3DTest, TestSum){

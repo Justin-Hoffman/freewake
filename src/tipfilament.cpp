@@ -7,7 +7,7 @@ TipFilament::TipFilament() : ni_( 2 ), nj_( 2 ),
                                  endPoints_( 2, std::vector<Vec3D>( 2, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  endPointV_( 2, std::vector<Vec3D>( 2, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  gamma_( 2, std::vector<double>( 1, 0.0  ) ) ,
-                                 rc_( 2, std::vector<double>( 1, 1.E-4 ) ) {
+                                 rc_( 2, std::vector<double>( 1, 5.E-1 ) ) {
  
 }
 
@@ -16,7 +16,7 @@ TipFilament::TipFilament( int ni, int nj ) :
                                  endPoints_( ni, std::vector<Vec3D>( nj, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  endPointV_( ni, std::vector<Vec3D>( nj, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  gamma_( ni, std::vector<double>( nj-1, 0.0  ) ), 
-                                 rc_( ni, std::vector<double>( nj-1, 1.E-4  ) ){
+                                 rc_( ni, std::vector<double>( nj-1, 5.E-1  ) ){
  
 }
 
@@ -110,7 +110,7 @@ void TipFilament::fixToWake( VortexLattice &vl ){
     }
     double den = 0.0, numx = 0.0, numy = 0.0, numz=0.0;
     double thisGamma = 0.0;
-    for(int i = 0; i < maxGammaI; i++){
+    for(int i = 0; i < maxGammaI/2; i++){
         thisGamma = 0.0;
         if ( i > 0 ) { thisGamma += vl.gammaJ()[i-1][maxj-2]; }
         if ( i < (maxi-1) ) { thisGamma -= vl.gammaJ()[i][maxj-2]; }
@@ -126,7 +126,7 @@ void TipFilament::fixToWake( VortexLattice &vl ){
         den = 1.0;
     };
     endPoints_[0][0] = Vec3D(numx/den, numy/den, numz/den);
-    gamma_[0][0] = 0.0;
+    gamma_[0][0] = nGamma/10.0;
     den = 0.0, numx = 0.0, numy = 0.0, numz=0.0;
     //printf("maxi of %i\n", maxi);
     //printf("maxGammaI of %i\n", maxGammaI);

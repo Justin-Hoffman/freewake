@@ -40,6 +40,7 @@ class HorseshoeLattice : public VortexContainer{
         int maxN();
         double dSpan(int i, int j);
         double dChord(int i);
+        double getRc( );
         Vec3D gammaVector(int i, int j);
         Vec3D gammaCenterPoint(int i, int j);
        
@@ -57,6 +58,7 @@ class HorseshoeLattice : public VortexContainer{
         void rotate( Vec3D point, Vec3D dir, double theta); 
         void scale( double scale ); 
         void translate( Vec3D dir ); 
+        void setRc( double );
         
     private:
         double rc_;

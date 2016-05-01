@@ -87,7 +87,7 @@ void SimulationManager::step(){
             tv.rc() = std::vector<std::vector<double> >(tvold.rc());
         }
     }
-    double eps = .7;
+    double eps = .5;
     //Apply explicit relaxation
     for (int h = 0; h < (int) surfaces_.size(); h++){
         VortexLattice &vl = surfaces_[h]->getVortexLattice();
@@ -98,11 +98,13 @@ void SimulationManager::step(){
             for( int i = 0; i < vl.ni(); i++ ){
                 for( int j = 0; j < vl.nj(); j++ ){
                     vl.endPoints()[i][j] = (eps) * vl.endPoints()[i][j] + (1.0-eps) * vlold.endPoints()[i][j];
+                    if ( j  < (vl.nj()-1) ) vl.gammaJ()[i][j] = (eps) * vl.gammaJ()[i][j] + (1.0-eps) * vlold.gammaJ()[i][j];
                 }
             }
             for(int i = 0; i < 2; i++){
                 for(int j = 0; j< tv.nj(); j++){
                     tv.endPoints()[i][j] = (eps) * tv.endPoints()[i][j] + (1.0-eps) * tvold.endPoints()[i][j];
+                    if ( j  < (tv.nj()-1) ) tv.gamma()[i][j] = (eps) * tv.gamma()[i][j] + (1.0-eps) * tvold.gamma()[i][j];
                 }
             }
         }
@@ -121,11 +123,13 @@ void SimulationManager::step(){
             for( int i = 0; i < vl.ni(); i++ ){
                 for( int j = 0; j < vl.nj(); j++ ){
                     vl.endPoints()[i][j] = (eps) * vl.endPoints()[i][j] + (1.0-eps) * vlold.endPoints()[i][j];
+                    if ( j  < (vl.nj()-1) ) vl.gammaJ()[i][j] = (eps) * vl.gammaJ()[i][j] + (1.0-eps) * vlold.gammaJ()[i][j];
                 }
             }
             for(int i = 0; i < 2; i++){
                 for(int j = 0; j< tv.nj(); j++){
                     tv.endPoints()[i][j] = (eps) * tv.endPoints()[i][j] + (1.0-eps) * tvold.endPoints()[i][j];
+                    if ( j  < (tv.nj()-1) ) tv.gamma()[i][j] = (eps) * tv.gamma()[i][j] + (1.0-eps) * tvold.gamma()[i][j];
                 }
             }
         }
@@ -302,7 +306,7 @@ void SimulationManager::integrateForceAndMoment(){
     fomo_.bodyForce = netForce;
     fomo_.bodyMoment = netMoment;
     fomo_.bodyForceCoeff = netForce/(1.0/2.0 * refV_ * refV_ * refSurf_.S );
-    fomo_.bodyMomentCoeff = netForce/(1.0/2.0 * refV_ * refV_ * refSurf_.S );
+    fomo_.bodyMomentCoeff = netMoment/(1.0/2.0 * refV_ * refV_ * refSurf_.S * refSurf_.b );
     Vec3D uX = Vec3D(1.0, 0.0, 0.0);
     Vec3D uV = globalLinearVelocity_.norm();
     Vec3D uL = uV.rotate( Vec3D(), Vec3D(0.0, 1.0, 0.0), -M_PI / 2.0 );

@@ -323,6 +323,15 @@ int HorseshoeLattice::nj(){
     return nj_;
 }
 
+double HorseshoeLattice::getRc(){
+    return rc_;
+}
+
+void HorseshoeLattice::setRc( double rc){
+    rc_ = rc;
+}
+
+
 PointSpacing HorseshoeLattice::chordwiseSpacing(){
     return chordwiseSpacing_;
 }

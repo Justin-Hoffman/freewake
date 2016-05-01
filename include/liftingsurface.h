@@ -26,6 +26,7 @@ class LiftingSurface{
         bool freeTipVortex();   
      
         double getAspectRatio();
+        double getCoreRadius();
         double getSpan();
         double getSweep();
         double getPitch();
@@ -48,6 +49,7 @@ class LiftingSurface{
         void setFreeTipVortex( bool );   
 
         void setAspectRatio( double );
+        void setCoreRadius( double );
         void setSpan( double );
         void setSweep( double );
         void setPitch( double );
@@ -66,6 +68,7 @@ class LiftingSurface{
         double span_;
         double sweep_;
         double pitch_;
+        double rc_;
         double rootChord_;
         double tipChord_;
         double tipDihedral_;

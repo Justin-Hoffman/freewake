@@ -6,9 +6,9 @@ VortexLattice::VortexLattice() : ni_( 2 ), nj_( 2 ),
                                  endPoints_( 2, std::vector<Vec3D>( 2, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  endPointV_( 2, std::vector<Vec3D>( 2, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  gammaI_( 1, std::vector<double>( 2, 0.0  ) ) , 
-                                 rcI_( 1, std::vector<double>( 2, 1.E-4  ) ) , 
+                                 rcI_( 1, std::vector<double>( 2, 1.E-2  ) ) , 
                                  gammaJ_( 2, std::vector<double>( 1, 0.0  ) ) ,
-                                 rcJ_( 2, std::vector<double>( 1, 1.E-4 ) ) {
+                                 rcJ_( 2, std::vector<double>( 1, 1.E-1 ) ) {
  
 }
 
@@ -17,9 +17,9 @@ VortexLattice::VortexLattice( int ni, int nj ) :
                                  endPoints_( ni, std::vector<Vec3D>( nj, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  endPointV_( ni, std::vector<Vec3D>( nj, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  gammaI_( ni-1, std::vector<double>( nj, 0.0  ) ), 
-                                 rcI_( ni-1, std::vector<double>( nj, 1.E-4  ) ), 
+                                 rcI_( ni-1, std::vector<double>( nj, 1.E-2  ) ), 
                                  gammaJ_( ni, std::vector<double>( nj-1, 0.0  ) ),
-                                 rcJ_( ni, std::vector<double>( nj-1, 1.E-4  ) ){
+                                 rcJ_( ni, std::vector<double>( nj-1, 1.E-1  ) ){
  
 }
 
