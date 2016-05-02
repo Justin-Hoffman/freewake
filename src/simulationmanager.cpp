@@ -21,6 +21,10 @@ SimulationManager::SimulationManager( const SimulationManager& s ) : needsSolve_
 }
 
 SimulationManager::~SimulationManager(){
+    for (int h = 0; h < oldSurfaces_.size(); h++){
+        delete( oldSurfaces_[h] );
+        delete( olderSurfaces_[h] );
+    }
 }
 
 extern void printMatrix( char const* desc, int m, int n, double* a, int lda );
@@ -90,7 +94,7 @@ void SimulationManager::step(){
             tv.rc() = std::vector<std::vector<double> >(tvold.rc());
         }
     }
-    double eps = 0.99;
+    double eps = 0.9;
     //Apply explicit relaxation
     for (int h = 0; h < (int) surfaces_.size(); h++){
         VortexLattice &vl = surfaces_[h]->getVortexLattice();
