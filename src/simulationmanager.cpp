@@ -93,7 +93,7 @@ void SimulationManager::step(){
             tv.rc() = std::vector<std::vector<double> >(tvold.rc());
         }
     }
-    double eps = 0.9;
+    double eps = 0.99;
     //Apply explicit relaxation
     for (int h = 0; h < (int) surfaces_.size(); h++){
         VortexLattice &vl = surfaces_[h]->getVortexLattice();
@@ -150,6 +150,106 @@ void SimulationManager::step(){
     
 }
 
+void SimulationManager::stepPCC(){
+    std::vector< LiftingSurface > originalSurfaces = std::vector< LiftingSurface >();
+    for (int h = 0; h < (int) surfaces_.size(); h++){
+        originalSurfaces.emplace_back( *surfaces_[h] );
+    }
+
+    //Do time step to get velocities for PCC
+    solve();
+    calculateWakeVelocities();
+    advectWake();
+    for (int h = 0; h < (int) surfaces_.size(); h++){
+        LiftingSurface* ls = surfaces_[h];
+        if (ls->freeWake()){
+            ls->getVortexLattice().fixToTrailingEdge( ls->getHorseshoeLattice() );
+        }
+    }
+    //fillWakeBC();
+    calculateWakeVelocities();
+    //Reset X,Y,Z,Gamma, but use average wake velocity
+    for (int h = 0; h < (int) surfaces_.size(); h++){
+        VortexLattice &vl = surfaces_[h]->getVortexLattice();
+        VortexLattice &vlold = originalSurfaces[h].getVortexLattice();
+        TipFilament &tv = surfaces_[h]->getTipFilament();
+        TipFilament &tvold = originalSurfaces[h].getTipFilament();
+        if (surfaces_[h]->freeWake()){
+            vl.endPoints() = std::vector<std::vector<Vec3D> >(vlold.endPoints());
+            vl.gammaI() = std::vector<std::vector< double > >(vlold.gammaI());
+            vl.gammaJ() = std::vector<std::vector< double > >(vlold.gammaJ());
+            vl.rcI() = std::vector<std::vector< double > >(vlold.rcI());
+            vl.rcJ() = std::vector<std::vector< double > >(vlold.rcJ());
+            tv.endPoints() = std::vector<std::vector<Vec3D> >(tvold.endPoints());
+            tv.gamma() = std::vector<std::vector<double> >(tvold.gamma());
+            tv.rc() = std::vector<std::vector<double> >(tvold.rc());
+            for(int i = 0; i < vl.ni(); i++){
+                for( int j = 0; j < vl.nj(); j++){
+                    vl.endPointVelocity()[i][j] = (vl.endPointVelocity()[i][j] + vlold.endPointVelocity()[i][j] ) /2.0;
+                }
+            }
+            for(int i = 0; i < tv.ni(); i++){
+                for( int j = 0; j < tv.nj(); j++){
+                    tv.endPointVelocity()[i][j] = (tv.endPointVelocity()[i][j] + tvold.endPointVelocity()[i][j] ) /2.0;
+                }
+            }
+        }
+    }
+    double eps = 0.99;
+    //Apply explicit relaxation
+    for (int h = 0; h < (int) surfaces_.size(); h++){
+        VortexLattice &vl = surfaces_[h]->getVortexLattice();
+        VortexLattice &vlold = originalSurfaces[h].getVortexLattice();
+        TipFilament &tv = surfaces_[h]->getTipFilament();
+        TipFilament &tvold = originalSurfaces[h].getTipFilament();
+        if (surfaces_[h]->freeWake()){
+            for( int i = 0; i < vl.ni(); i++ ){
+                for( int j = 0; j < vl.nj(); j++ ){
+                    vl.endPoints()[i][j] = (eps) * vl.endPoints()[i][j] + (1.0-eps) * vlold.endPoints()[i][j];
+                    if ( j  < (vl.nj()-1) ) vl.gammaJ()[i][j] = (eps) * vl.gammaJ()[i][j] + (1.0-eps) * vlold.gammaJ()[i][j];
+                }
+            }
+            for(int i = 0; i < 2; i++){
+                for(int j = 0; j< tv.nj(); j++){
+                    tv.endPoints()[i][j] = (eps) * tv.endPoints()[i][j] + (1.0-eps) * tvold.endPoints()[i][j];
+                    if ( j  < (tv.nj()-1) ) tv.gamma()[i][j] = (eps) * tv.gamma()[i][j] + (1.0-eps) * tvold.gamma()[i][j];
+                }
+            }
+        }
+    }
+    advectWake();
+    fillWakeBC();
+    //fillWakeBC();
+    
+    //Apply explicit relaxation
+    for (int h = 0; h < (int) surfaces_.size(); h++){
+        VortexLattice &vl = surfaces_[h]->getVortexLattice();
+        VortexLattice &vlold = originalSurfaces[h].getVortexLattice();
+        TipFilament &tv = surfaces_[h]->getTipFilament();
+        TipFilament &tvold = originalSurfaces[h].getTipFilament();
+        if (surfaces_[h]->freeWake()){
+            for( int i = 0; i < vl.ni(); i++ ){
+                for( int j = 0; j < vl.nj(); j++ ){
+                    vl.endPoints()[i][j] = (eps) * vl.endPoints()[i][j] + (1.0-eps) * vlold.endPoints()[i][j];
+                    if ( j  < (vl.nj()-1) ) vl.gammaJ()[i][j] = (eps) * vl.gammaJ()[i][j] + (1.0-eps) * vlold.gammaJ()[i][j];
+                }
+            }
+            for(int i = 0; i < 2; i++){
+                for(int j = 0; j< tv.nj(); j++){
+                    tv.endPoints()[i][j] = (eps) * tv.endPoints()[i][j] + (1.0-eps) * tvold.endPoints()[i][j];
+                    if ( j  < (tv.nj()-1) ) tv.gamma()[i][j] = (eps) * tv.gamma()[i][j] + (1.0-eps) * tvold.gamma()[i][j];
+                }
+            }
+        }
+    }
+    for (int h = 0; h < (int) surfaces_.size(); h++){
+        LiftingSurface* ls = surfaces_[h];
+        if (ls->freeWake()){
+            ls->getVortexLattice().fixToTrailingEdge( ls->getHorseshoeLattice() );
+        }
+    }
+    
+}
  
 void SimulationManager::solve(){
     if ( needsSolve_ ){
@@ -379,8 +479,10 @@ void SimulationManager::advectWake(){
             VortexLattice& vl = s->getVortexLattice();
             //vl.advect( dt_ );
             vl.advectAndRotate( dt_, globalRotationAxis_, globalRotationRate_ );
+            //vl.advectPCC( dt_, globalRotationAxis_, globalRotationRate_ );
             TipFilament& tf = s->getTipFilament();
             tf.advectAndRotate( dt_, globalRotationAxis_, globalRotationRate_ );
+            //tf.advectPCC( dt_, globalRotationAxis_, globalRotationRate_ );
         }
     }
 }

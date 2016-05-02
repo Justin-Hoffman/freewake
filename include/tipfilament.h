@@ -27,6 +27,7 @@ class TipFilament : public VortexContainer{
         void fixToWake( VortexLattice &h );
         void advect( double dt );
         void advectAndRotate( double dt, Vec3D axis, double omega );
+        void advectPCC( double dt, Vec3D axis, double omega );
         void initializeToHelix( Vec3D axis, double dTheta, double dZ );
         void printState();
         

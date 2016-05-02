@@ -39,6 +39,7 @@ class SimulationManager {
         void setReferenceVelocity( double );
         void setDt( double );
         void step();
+        void stepPCC();
         void integrateForceAndMoment();
         void printState();
 
