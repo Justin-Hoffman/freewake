@@ -5,14 +5,15 @@
 
 extern void dgesv_(int*, int*, double*, int*, int*, double*, int*, int*);
 
-SimulationManager::SimulationManager() : needsSolve_( true ), surfaces_(), nOffset_(1,0), lastGamma_(), thisGamma_(), 
+SimulationManager::SimulationManager() : needsSolve_( true ), surfaces_(), oldSurfaces_(), olderSurfaces_(), nOffset_(1,0), lastGamma_(), thisGamma_(), 
                                          refSurf_( ReferenceSurface(1.0, 1.0, 1.0) ), refV_(1.0), dt_( 0.10 ), 
                                          globalLinearVelocity_(), globalRotationAxis_(0.0,0.0,1.0), globalRotationRate_(0.0), 
                                          fomo_() {
 
 }
 
-SimulationManager::SimulationManager( const SimulationManager& s ) : needsSolve_( s.needsSolve_ ), surfaces_(s.surfaces_), nOffset_(s.nOffset_), lastGamma_( s.lastGamma_ ), thisGamma_( s.thisGamma_ ),
+SimulationManager::SimulationManager( const SimulationManager& s ) : needsSolve_( s.needsSolve_ ), surfaces_( s.surfaces_ ), oldSurfaces_( s.oldSurfaces_ ), olderSurfaces_( s.olderSurfaces_ ),  
+                                                               nOffset_(s.nOffset_), lastGamma_( s.lastGamma_ ), thisGamma_( s.thisGamma_ ),
                                                                refSurf_( s.refSurf_ ), refV_( s.refV_ ), dt_( s.dt_ ), 
                                                                globalLinearVelocity_( s.globalLinearVelocity_), globalRotationAxis_( s.globalRotationAxis_ ), globalRotationRate_( s.globalRotationRate_),
                                                                fomo_( s.fomo_ ) {
@@ -27,6 +28,8 @@ extern void print_int_vector( char const* desc, int n, int* a );
 
 void SimulationManager::addSurface( LiftingSurface* s){
     surfaces_.push_back( s );
+    oldSurfaces_.push_back( new LiftingSurface( *s ) );
+    olderSurfaces_.push_back( new LiftingSurface( *s ) );
     nOffset_.push_back( s->getHorseshoeLattice().maxN() + nOffset_.back() );
     lastGamma_.push_back( std::vector<double>(s->nSpan()) ); //Make a double array of nSpan
     thisGamma_.push_back( std::vector<double>(s->nSpan()) ); //Make a double array of nSpan
@@ -68,13 +71,7 @@ void SimulationManager::step(){
     solve();
     calculateWakeVelocities();
     advectWake();
-    for (int h = 0; h < (int) surfaces_.size(); h++){
-        LiftingSurface* ls = surfaces_[h];
-        if (ls->freeWake()){
-            ls->getVortexLattice().fixToTrailingEdge( ls->getHorseshoeLattice() );
-        }
-    }
-    //fillWakeBC();
+    matchFirstWakePointsToSurface();
     calculateWakeVelocities();
     //Reset X,Y,Z,Gamma, but use new wake velocity
     for (int h = 0; h < (int) surfaces_.size(); h++){
@@ -141,13 +138,7 @@ void SimulationManager::step(){
             }
         }
     }
-    for (int h = 0; h < (int) surfaces_.size(); h++){
-        LiftingSurface* ls = surfaces_[h];
-        if (ls->freeWake()){
-            ls->getVortexLattice().fixToTrailingEdge( ls->getHorseshoeLattice() );
-        }
-    }
-    
+    matchFirstWakePointsToSurface();
 }
 
 void SimulationManager::stepPCC(){
@@ -160,13 +151,7 @@ void SimulationManager::stepPCC(){
     solve();
     calculateWakeVelocities();
     advectWake();
-    for (int h = 0; h < (int) surfaces_.size(); h++){
-        LiftingSurface* ls = surfaces_[h];
-        if (ls->freeWake()){
-            ls->getVortexLattice().fixToTrailingEdge( ls->getHorseshoeLattice() );
-        }
-    }
-    //fillWakeBC();
+    matchFirstWakePointsToSurface();
     calculateWakeVelocities();
     //Reset X,Y,Z,Gamma, but use average wake velocity
     for (int h = 0; h < (int) surfaces_.size(); h++){
@@ -219,7 +204,6 @@ void SimulationManager::stepPCC(){
     }
     advectWake();
     fillWakeBC();
-    //fillWakeBC();
     
     //Apply explicit relaxation
     for (int h = 0; h < (int) surfaces_.size(); h++){
@@ -242,15 +226,58 @@ void SimulationManager::stepPCC(){
             }
         }
     }
-    for (int h = 0; h < (int) surfaces_.size(); h++){
-        LiftingSurface* ls = surfaces_[h];
-        if (ls->freeWake()){
-            ls->getVortexLattice().fixToTrailingEdge( ls->getHorseshoeLattice() );
-        }
-    }
-    
+    matchFirstWakePointsToSurface();
 }
  
+void SimulationManager::stepPC2B(){
+    std::vector< LiftingSurface > originalSurfaces = std::vector< LiftingSurface >();
+    for (int h = 0; h < (int) surfaces_.size(); h++){
+        originalSurfaces.emplace_back( *surfaces_[h] );
+    }
+    //Do time step to get velocities for PCC
+    solve();
+    calculateWakeVelocities();
+    advectWakePC2B();
+    matchFirstWakePointsToSurface();
+    //fillWakeBC();
+    calculateWakeVelocities();
+    //Reset X,Y,Z,Gamma, but use average wake velocity
+    for (int h = 0; h < (int) surfaces_.size(); h++){
+        VortexLattice &vl = surfaces_[h]->getVortexLattice();
+        VortexLattice &vlold = originalSurfaces[h].getVortexLattice();
+        TipFilament &tv = surfaces_[h]->getTipFilament();
+        TipFilament &tvold = originalSurfaces[h].getTipFilament();
+        if (surfaces_[h]->freeWake()){
+            vl.endPoints() = std::vector<std::vector<Vec3D> >(vlold.endPoints());
+            vl.gammaI() = std::vector<std::vector< double > >(vlold.gammaI());
+            vl.gammaJ() = std::vector<std::vector< double > >(vlold.gammaJ());
+            vl.rcI() = std::vector<std::vector< double > >(vlold.rcI());
+            vl.rcJ() = std::vector<std::vector< double > >(vlold.rcJ());
+            tv.endPoints() = std::vector<std::vector<Vec3D> >(tvold.endPoints());
+            tv.gamma() = std::vector<std::vector<double> >(tvold.gamma());
+            tv.rc() = std::vector<std::vector<double> >(tvold.rc());
+            for(int i = 0; i < vl.ni(); i++){
+                for( int j = 0; j < vl.nj(); j++){
+                    vl.endPointVelocity()[i][j] = (vl.endPointVelocity()[i][j] + vlold.endPointVelocity()[i][j] ) /2.0;
+                }
+            }
+            for(int i = 0; i < tv.ni(); i++){
+                for( int j = 0; j < tv.nj(); j++){
+                    tv.endPointVelocity()[i][j] = (tv.endPointVelocity()[i][j] + tvold.endPointVelocity()[i][j] ) /2.0;
+                }
+            }
+        }
+    }
+    advectWakePC2B();
+    fillWakeBC();
+    matchFirstWakePointsToSurface();
+    for (int h = 0; h < (int) surfaces_.size(); h++){
+        delete( olderSurfaces_[h] );
+        olderSurfaces_[h] = oldSurfaces_[h];
+        oldSurfaces_[h] =  new LiftingSurface( originalSurfaces[h] );
+    }
+    //Do time step to get velocities for PCC
+}
 void SimulationManager::solve(){
     if ( needsSolve_ ){
         int maxN = nOffset_.back();
@@ -477,12 +504,31 @@ void SimulationManager::advectWake(){
         LiftingSurface* s = surfaces_[h];
         if  ( s->freeWake() ){ //If surface is a free wake case we need to calculate wake velocity
             VortexLattice& vl = s->getVortexLattice();
-            //vl.advect( dt_ );
             vl.advectAndRotate( dt_, globalRotationAxis_, globalRotationRate_ );
-            //vl.advectPCC( dt_, globalRotationAxis_, globalRotationRate_ );
             TipFilament& tf = s->getTipFilament();
             tf.advectAndRotate( dt_, globalRotationAxis_, globalRotationRate_ );
-            //tf.advectPCC( dt_, globalRotationAxis_, globalRotationRate_ );
+        }
+    }
+}
+
+void SimulationManager::advectWakePC2B(){
+    //For every surface
+    for( int h = 0; h < (int) surfaces_.size(); h++ ){
+        LiftingSurface* s = surfaces_[h];
+        if  ( s->freeWake() ){ //If surface is a free wake case we need to calculate wake velocity
+            VortexLattice& vl = s->getVortexLattice();
+            vl.advectPC2B( dt_, globalRotationAxis_, globalRotationRate_, oldSurfaces_[h]->getVortexLattice(), olderSurfaces_[h]->getVortexLattice() );
+            TipFilament& tf = s->getTipFilament();
+            tf.advectPC2B( dt_, globalRotationAxis_, globalRotationRate_, oldSurfaces_[h]->getTipFilament(), olderSurfaces_[h]->getTipFilament() );
+        }
+    }
+}
+
+void SimulationManager::matchFirstWakePointsToSurface(){
+    for (int h = 0; h < (int) surfaces_.size(); h++){
+        LiftingSurface* ls = surfaces_[h];
+        if (ls->freeWake()){
+            ls->getVortexLattice().fixToTrailingEdge( ls->getHorseshoeLattice() );
         }
     }
 }

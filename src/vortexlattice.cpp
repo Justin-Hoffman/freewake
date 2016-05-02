@@ -120,6 +120,24 @@ void VortexLattice::advectAndRotate( double dt, Vec3D axis, double omega ){
     }    
 }
 
+void VortexLattice::advectPC2B( double dt, Vec3D axis, double omega, VortexLattice& old, VortexLattice& older ){
+    double third = 1.0/3.0;
+    for ( int i = ni_-1; i > -1; i--){
+        for (int j = nj_-1; j > 0; j--){
+            endPoints_[i][j] = third*(endPoints_[i][j-1]).rotate(Vec3D(0.0, 0.0, 0.0), axis, omega*dt) + (endPointV_[i][j-1] + endPointV_[i][j])/2.0*dt
+                             + old.endPoints_[i][j] - third*old.endPoints_[i][j];
+            if ( i < ni_-1 ){
+                gammaI_[i][j] = gammaI_[i][j-1];
+                rcI_[i][j] = VortexCoreGrowth( rcI_[i][j-1], dt );
+            }
+            if ( j < nj_-1 ){
+                gammaJ_[i][j] = gammaJ_[i][j-1];
+                rcJ_[i][j] = VortexCoreGrowth( rcJ_[i][j-1], dt );
+            }
+        }
+    }    
+}
+
 void VortexLattice::fixToTrailingEdge( HorseshoeLattice &h ){
     int maxj = h.nj();
     for ( int i = 0; i < ni_; i++){

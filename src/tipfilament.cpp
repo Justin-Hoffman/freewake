@@ -94,6 +94,20 @@ void TipFilament::advectAndRotate( double dt, Vec3D axis, double omega ){
     }    
 }
 
+void TipFilament::advectPC2B( double dt, Vec3D axis, double omega, TipFilament& old, TipFilament& older ){
+    double third = 1.0/3.0;
+    for ( int i = ni_-1; i > -1; i--){
+        for (int j = nj_-1; j > 0; j--){
+            endPoints_[i][j] = third*(endPoints_[i][j-1]).rotate(Vec3D(0.0, 0.0, 0.0), axis, omega*dt) + (endPointV_[i][j-1] + endPointV_[i][j])/2.0*dt
+                             + old.endPoints_[i][j] - third*old.endPoints_[i][j];
+            if ( j < nj_-1 ){
+                gamma_[i][j] = gamma_[i][j-1];
+                rc_[i][j] = VortexCoreGrowth( rc_[i][j-1], dt );
+            }
+        }
+    }    
+}
+
 void TipFilament::fixToWake( VortexLattice &vl ){
     int maxi = vl.ni();
     int maxj = vl.nj();

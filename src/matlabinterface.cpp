@@ -133,7 +133,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         double time = 0;
         // mexprintf("Solve\n");
         while ( nStep < nt ){
-            sm.stepPCC();
+            sm.stepPC2B();
             time += sm.dt();
             if (nStep % 1 == 0){
                 for(int iSurface = 0; iSurface < nSurfaces; iSurface++){

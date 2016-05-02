@@ -29,8 +29,10 @@ class SimulationManager {
         
         void addSurface( LiftingSurface* s);
         void advectWake();
+        void advectWakePC2B();
         void calculateWakeVelocities();
         void fillWakeBC();
+        void matchFirstWakePointsToSurface();
         void setGlobalLinearVelocity( Vec3D v );
         void setGlobalRotationAxis( Vec3D v );
         void setGlobalRotationRate( double );
@@ -40,6 +42,7 @@ class SimulationManager {
         void setDt( double );
         void step();
         void stepPCC();
+        void stepPC2B();
         void integrateForceAndMoment();
         void printState();
 
@@ -64,6 +67,8 @@ class SimulationManager {
     private:
         bool needsSolve_; 
         std::vector<LiftingSurface*> surfaces_;
+        std::vector<LiftingSurface*> oldSurfaces_;
+        std::vector<LiftingSurface*> olderSurfaces_;
         std::vector<int>   nOffset_;
         std::vector< std::vector<double> > lastGamma_;
         std::vector< std::vector<double> > thisGamma_;
