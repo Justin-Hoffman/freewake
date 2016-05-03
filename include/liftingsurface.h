@@ -91,7 +91,9 @@ struct ReferenceSurface {
     double S;
     double b;
     double cbar;
-    ReferenceSurface() : S( 1.0 ), b( 1.0 ), cbar(1.0) {}   
-    ReferenceSurface( double s_in, double b_in, double c_in ) : S(s_in), b(b_in), cbar(c_in){}
+    double vMach; 
+    bool pgCorrection;
+    ReferenceSurface() : S( 1.0 ), b( 1.0 ), cbar(1.0), vMach(999.999), pgCorrection(false) {}   
+    ReferenceSurface( double s_in, double b_in, double c_in ) : S(s_in), b(b_in), cbar(c_in), vMach(999.99), pgCorrection(false){}
 };
 #endif

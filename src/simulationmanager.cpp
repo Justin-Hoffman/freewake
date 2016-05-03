@@ -95,31 +95,9 @@ void SimulationManager::step(){
         }
     }
     double eps = 0.9;
-    //Apply explicit relaxation
-    for (int h = 0; h < (int) surfaces_.size(); h++){
-        VortexLattice &vl = surfaces_[h]->getVortexLattice();
-        VortexLattice &vlold = originalSurfaces[h].getVortexLattice();
-        TipFilament &tv = surfaces_[h]->getTipFilament();
-        TipFilament &tvold = originalSurfaces[h].getTipFilament();
-        if (surfaces_[h]->freeWake()){
-            for( int i = 0; i < vl.ni(); i++ ){
-                for( int j = 0; j < vl.nj(); j++ ){
-                    vl.endPoints()[i][j] = (eps) * vl.endPoints()[i][j] + (1.0-eps) * vlold.endPoints()[i][j];
-                    if ( j  < (vl.nj()-1) ) vl.gammaJ()[i][j] = (eps) * vl.gammaJ()[i][j] + (1.0-eps) * vlold.gammaJ()[i][j];
-                }
-            }
-            for(int i = 0; i < 2; i++){
-                for(int j = 0; j< tv.nj(); j++){
-                    tv.endPoints()[i][j] = (eps) * tv.endPoints()[i][j] + (1.0-eps) * tvold.endPoints()[i][j];
-                    if ( j  < (tv.nj()-1) ) tv.gamma()[i][j] = (eps) * tv.gamma()[i][j] + (1.0-eps) * tvold.gamma()[i][j];
-                }
-            }
-        }
-    }
     dt_ = dt;
     advectWake();
     fillWakeBC();
-    //fillWakeBC();
     
     //Apply explicit relaxation
     for (int h = 0; h < (int) surfaces_.size(); h++){
@@ -184,32 +162,12 @@ void SimulationManager::stepPCC(){
             }
         }
     }
-    double eps = 0.99;
     //Apply explicit relaxation
-    for (int h = 0; h < (int) surfaces_.size(); h++){
-        VortexLattice &vl = surfaces_[h]->getVortexLattice();
-        VortexLattice &vlold = originalSurfaces[h].getVortexLattice();
-        TipFilament &tv = surfaces_[h]->getTipFilament();
-        TipFilament &tvold = originalSurfaces[h].getTipFilament();
-        if (surfaces_[h]->freeWake()){
-            for( int i = 0; i < vl.ni(); i++ ){
-                for( int j = 0; j < vl.nj(); j++ ){
-                    vl.endPoints()[i][j] = (eps) * vl.endPoints()[i][j] + (1.0-eps) * vlold.endPoints()[i][j];
-                    if ( j  < (vl.nj()-1) ) vl.gammaJ()[i][j] = (eps) * vl.gammaJ()[i][j] + (1.0-eps) * vlold.gammaJ()[i][j];
-                }
-            }
-            for(int i = 0; i < 2; i++){
-                for(int j = 0; j< tv.nj(); j++){
-                    tv.endPoints()[i][j] = (eps) * tv.endPoints()[i][j] + (1.0-eps) * tvold.endPoints()[i][j];
-                    if ( j  < (tv.nj()-1) ) tv.gamma()[i][j] = (eps) * tv.gamma()[i][j] + (1.0-eps) * tvold.gamma()[i][j];
-                }
-            }
-        }
-    }
     advectWake();
     fillWakeBC();
     
     //Apply explicit relaxation
+    double eps = 0.99;
     for (int h = 0; h < (int) surfaces_.size(); h++){
         VortexLattice &vl = surfaces_[h]->getVortexLattice();
         VortexLattice &vlold = originalSurfaces[h].getVortexLattice();
@@ -243,7 +201,6 @@ void SimulationManager::stepPC2B(){
     calculateWakeVelocities();
     advectWakePC2B();
     matchFirstWakePointsToSurface();
-    //fillWakeBC();
     calculateWakeVelocities();
     //Reset X,Y,Z,Gamma, but use average wake velocity
     for (int h = 0; h < (int) surfaces_.size(); h++){
@@ -274,6 +231,28 @@ void SimulationManager::stepPC2B(){
     }
     advectWakePC2B();
     fillWakeBC();
+    //Apply explicit relaxation
+    double eps = 0.9;
+    for (int h = 0; h < (int) surfaces_.size(); h++){
+        VortexLattice &vl = surfaces_[h]->getVortexLattice();
+        VortexLattice &vlold = originalSurfaces[h].getVortexLattice();
+        TipFilament &tv = surfaces_[h]->getTipFilament();
+        TipFilament &tvold = originalSurfaces[h].getTipFilament();
+        if (surfaces_[h]->freeWake()){
+            for( int i = 0; i < vl.ni(); i++ ){
+                for( int j = 0; j < vl.nj(); j++ ){
+                    vl.endPoints()[i][j] = (eps) * vl.endPoints()[i][j] + (1.0-eps) * vlold.endPoints()[i][j];
+                    if ( j  < (vl.nj()-1) ) vl.gammaJ()[i][j] = (eps) * vl.gammaJ()[i][j] + (1.0-eps) * vlold.gammaJ()[i][j];
+                }
+            }
+            for(int i = 0; i < 2; i++){
+                for(int j = 0; j< tv.nj(); j++){
+                    tv.endPoints()[i][j] = (eps) * tv.endPoints()[i][j] + (1.0-eps) * tvold.endPoints()[i][j];
+                    if ( j  < (tv.nj()-1) ) tv.gamma()[i][j] = (eps) * tv.gamma()[i][j] + (1.0-eps) * tvold.gamma()[i][j];
+                }
+            }
+        }
+    }
     matchFirstWakePointsToSurface();
     for (int h = 0; h < (int) surfaces_.size(); h++){
         delete( olderSurfaces_[h] );
@@ -439,7 +418,13 @@ void SimulationManager::integrateForceAndMoment(){
                     //vInduced += hlj.calcInducedVelocity( thisGammaCenter );
                     vInduced += vIndH;
                 }//hj
-                Vec3D force = (vInf+vInduced).cross( thisGamma );
+                Vec3D force;
+                if ( refSurf_.pgCorrection ){
+                    double beta = 1.0/sqrt(1.0 - (vInf+vInduced).magnitude()*(vInf+vInduced).magnitude()/(refSurf_.vMach * refSurf_.vMach));
+                    force = (vInf+vInduced).cross( thisGamma )/beta;
+                } else {
+                    force = (vInf+vInduced).cross( thisGamma );
+                }
                 netForce += force;
                 netMoment += force.cross(thisGammaCenter);
                 chordwiseSum += force;
@@ -475,8 +460,8 @@ void SimulationManager::calculateWakeVelocities(){
                         LiftingSurface* sj = surfaces_[hj];
                         if (j > 0) vInduced += sj->calcInducedVelocity( thisEndPoint );
                     }//hj
-                    //Vec3D vInf  = vInfinity( thisEndPoint );
-                    Vec3D vInf  = vInfinityLinearOnly();
+                    Vec3D vInf  = vInfinity( thisEndPoint );
+                    //Vec3D vInf  = vInfinityLinearOnly();
                     vl.endPointVelocity()[i][j] = vInduced + vInf;
                 }
             }
@@ -493,8 +478,8 @@ void SimulationManager::calculateWakeVelocities(){
                         LiftingSurface* sj = surfaces_[hj];
                         if (j > 0) vInduced += sj->calcInducedVelocity( thisEndPoint );
                     }//hj
-                    //Vec3D vInf  = vInfinity( thisEndPoint );
-                    Vec3D vInf  = vInfinityLinearOnly();
+                    Vec3D vInf  = vInfinity( thisEndPoint );
+                    //Vec3D vInf  = vInfinityLinearOnly();
                     tf.endPointVelocity()[i][j] = vInduced + vInf;
                 }
             }
@@ -510,6 +495,7 @@ void SimulationManager::advectWake(){
             VortexLattice& vl = s->getVortexLattice();
             vl.advectAndRotate( dt_, globalRotationAxis_, globalRotationRate_ );
             TipFilament& tf = s->getTipFilament();
+            tf.fixToWake( vl );
             tf.advectAndRotate( dt_, globalRotationAxis_, globalRotationRate_ );
         }
     }
@@ -523,6 +509,7 @@ void SimulationManager::advectWakePC2B(){
             VortexLattice& vl = s->getVortexLattice();
             vl.advectPC2B( dt_, globalRotationAxis_, globalRotationRate_, oldSurfaces_[h]->getVortexLattice(), olderSurfaces_[h]->getVortexLattice() );
             TipFilament& tf = s->getTipFilament();
+            tf.fixToWake( vl );
             tf.advectPC2B( dt_, globalRotationAxis_, globalRotationRate_, oldSurfaces_[h]->getTipFilament(), olderSurfaces_[h]->getTipFilament() );
         }
     }
@@ -546,7 +533,7 @@ void SimulationManager::fillWakeBC(){
             vl.fixToTrailingEdge( s->getHorseshoeLattice() );
             //For end points along span and wake
             for(int i = 0; i < s->nSpan()+1; i++){
-                if ( i < s->nSpan() ) vl.gammaI()[i][0] = (lastGamma_[h][i] - thisGamma_[h][i])*0.1;
+                if ( i < s->nSpan() ) vl.gammaI()[i][0] = (lastGamma_[h][i] - thisGamma_[h][i])*.25;
                 if ( i > 0 && i < s->nSpan() ) {   
                     vl.gammaJ()[i][0] = lastGamma_[h][i-1] - lastGamma_[h][i]; 
                 } else if ( i == s->nSpan() ) {   
@@ -609,7 +596,7 @@ Vec3D SimulationManager::vInfinity( Vec3D p ){
     Vec3D vInf = globalLinearVelocity_; 
     //Vec3d vRot = globablRotationRate_ * globalRotationAxis_.cross(p);
     if( fabs(globalRotationRate_) > 0.0 ){
-        Vec3D vRot1 = globalRotationRate_ * globalRotationAxis_.cross( p.rotate( Vec3D(0.0, 0.0, 0.0), globalRotationAxis_, globalRotationRate_*dt_*2.0 ) );
+        Vec3D vRot1 = globalRotationRate_ * globalRotationAxis_.cross( p );
         vInf += vRot1;
     }
     return vInf;

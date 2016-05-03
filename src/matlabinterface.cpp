@@ -6,16 +6,19 @@ extern void _main();
 extern "C"
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){ 
         double omega = 176.0; //Roughly mach 0.6 for a 7.5 ft span rotor (Caradonna Tung Rotor)
-        double dt = 2.0*M_PI/ omega / 60.0;
+        double dt = 2.0*M_PI/ omega / 40.0;
         double r = 6.0; 
         double c = 1.0;
         double refA = M_PI * r * r;
+        ReferenceSurface refS = ReferenceSurface( refA, r, c);
+        refS.pgCorrection = true;
+        refS.vMach = 1100.0;
         //Run Simulation
         SimulationManager sm = SimulationManager();
         sm.setReferenceVelocity( omega * r );
         sm.setDt( dt );
         sm.setReferenceSurface( ReferenceSurface( refA, r, c) );
-        LiftingSurface ls = LiftingSurface(15,8,12, 360);
+        LiftingSurface ls = LiftingSurface(16,10,100,200);
         ls.setFreeWake( true );
         ls.setFreeTipVortex( true );
         ls.setAspectRatio( 5.25 );
@@ -133,7 +136,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         double time = 0;
         // mexprintf("Solve\n");
         while ( nStep < nt ){
-            sm.step();
+            sm.stepPC2B();
             time += sm.dt();
             if (nStep % 1 == 0){
                 for(int iSurface = 0; iSurface < nSurfaces; iSurface++){
@@ -146,7 +149,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
                     tp[nStep ]  = time;
                 }
             }
-            if (nStep % 20 == 0){
+            if (nStep % 1 == 0){
                 for(int iSurface = 0; iSurface < nSurfaces; iSurface++){
                     LiftingSurface &l = sm.getSurface( iSurface );
                     HorseshoeLattice &hl = l.getHorseshoeLattice();  
