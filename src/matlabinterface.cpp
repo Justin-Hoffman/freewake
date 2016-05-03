@@ -18,13 +18,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         sm.setReferenceVelocity( omega * r );
         sm.setDt( dt );
         sm.setReferenceSurface( ReferenceSurface( refA, r, c) );
-        LiftingSurface ls = LiftingSurface(16,10,100,200);
+        LiftingSurface ls = LiftingSurface(16,10,130,160);
         ls.setFreeWake( true );
         ls.setFreeTipVortex( true );
         ls.setAspectRatio( 5.25 );
         ls.setPitch( 5.0 * M_PI / 180.0 );
         ls.setCoreRadius( 1E-3 );
-        ls.setTipDihedral( 0.0 * M_PI/180.0 );
+        ls.setTipDihedral( -30.0 * M_PI/180.0 );
         ls.setTipDihedralBreak( .9*5.25/6.0 );
         ls.getHorseshoeLattice().spanwiseSpacing(PointSpacing::Cosine);
         ls.getHorseshoeLattice().chordwiseSpacing(PointSpacing::Cosine);
@@ -32,7 +32,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         ls.updateLattice( );
         ls.getHorseshoeLattice().translate( Vec3D(0.0, 0.75, 0.0) );
         ls.getVortexLattice().fixToTrailingEdge( ls.getHorseshoeLattice() );
-        ls.getVortexLattice().initializeToHelix( Vec3D(0.0, 0.0, 1.0), (omega)*sm.dt(), -0.0 );
+        ls.getVortexLattice().initializeToHelix( Vec3D(0.0, 0.0, 1.0), (omega)*sm.dt(), -0.01 );
         ls.getVortexLattice().fixToTrailingEdge( ls.getHorseshoeLattice() );
         ls.getTipFilament().fixToWake( ls.getVortexLattice() );
         ls.getTipFilament().initializeToHelix( Vec3D(0.0, 0.0, 1.0), (omega)*sm.dt(), -0.01 );
@@ -42,7 +42,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         ls.setFreeTipVortex( true );
         ls2.getHorseshoeLattice().rotate(  Vec3D(0.0,0.0,0.0), Vec3D(0.0, 0.0, -1.0), M_PI );
         ls2.getVortexLattice().fixToTrailingEdge( ls2.getHorseshoeLattice() );
-        ls2.getVortexLattice().initializeToHelix( Vec3D(0.0, 0.0, 1.0), (omega)*sm.dt(), -0.0 );
+        ls2.getVortexLattice().initializeToHelix( Vec3D(0.0, 0.0, 1.0), (omega)*sm.dt(), -0.01 );
         ls2.getVortexLattice().fixToTrailingEdge( ls2.getHorseshoeLattice() );
         ls2.getTipFilament().fixToWake( ls2.getVortexLattice() );
         ls2.getTipFilament().initializeToHelix( Vec3D(0.0, 0.0, 1.0), (omega)*sm.dt(), -0.01);
@@ -54,7 +54,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         sm.setGlobalRotationAxis( Vec3D(0.0, 0.0, 1.0).rotate(Vec3D(0.0, 0.0, 0.0), Vec3D(0.0, 1.0, 0.0), -0.0*M_PI/180.0 ) );
         sm.setGlobalRotationRate( omega );
         
-        int nt = 2000;
+        int nt = 1000;
         int nFields = 22;
         int nSurfaces = sm.getNSurfaces();
         const char* fieldNames[] = {"xSurface","ySurface","zSurface","xWake","yWake", "zWake","xCp","yCp","zCp","xTipFilament","yTipFilament", "zTipFilament", "xSpanwiseForce", "ySpanwiseForce", "zSpanwiseForce", 
@@ -138,7 +138,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         while ( nStep < nt ){
             sm.stepPC2B();
             time += sm.dt();
-            if (nStep % 1 == 0){
                 for(int iSurface = 0; iSurface < nSurfaces; iSurface++){
                     LiftingSurface &l = sm.getSurface( iSurface );
                     double* cfzp = mxGetPr( cfz[iSurface] );
@@ -148,8 +147,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
                     cmzp[nStep]  = sm.forcesAndMoments().bodyMomentCoeff.z;
                     tp[nStep ]  = time;
                 }
-            }
-            if (nStep % 1 == 0){
+            if (nStep % 5 == 0){
                 for(int iSurface = 0; iSurface < nSurfaces; iSurface++){
                     LiftingSurface &l = sm.getSurface( iSurface );
                     HorseshoeLattice &hl = l.getHorseshoeLattice();  
