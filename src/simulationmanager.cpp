@@ -3,6 +3,10 @@
 #include "string.h"
 #include "lapacke.h"
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 extern void dgesv_(int*, int*, double*, int*, int*, double*, int*, int*);
 
 SimulationManager::SimulationManager() : needsSolve_( true ), surfaces_(), oldSurfaces_(), olderSurfaces_(), nOffset_(1,0), lastGamma_(), thisGamma_(), 
@@ -94,7 +98,7 @@ void SimulationManager::step(){
             tv.rc() = std::vector<std::vector<double> >(tvold.rc());
         }
     }
-    double eps = 0.9;
+    double eps = 0.95;
     dt_ = dt;
     advectWake();
     fillWakeBC();
@@ -232,7 +236,7 @@ void SimulationManager::stepPC2B(){
     advectWakePC2B();
     fillWakeBC();
     //Apply explicit relaxation
-    double eps = 0.9;
+    double eps = 0.99;
     for (int h = 0; h < (int) surfaces_.size(); h++){
         VortexLattice &vl = surfaces_[h]->getVortexLattice();
         VortexLattice &vlold = originalSurfaces[h].getVortexLattice();

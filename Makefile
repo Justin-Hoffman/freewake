@@ -2,6 +2,10 @@
 CC = gcc 
 CPP = g++
 
+PREFIX = x86_64-w64-mingw32
+WIN_CC = $(PREFIX)-$(CC)
+WIN_CPP = $(PREFIX)-$(CPP)
+
 #CPP = clang++-3.5 
 #CPP = clang++-3.5
 
@@ -10,10 +14,11 @@ CPP = g++
 # Compile-time flags 
 #CFLAGS = -Wall -Weffc++ -fPIC -std=c++11 -mtune=core-avx2 -msse4.2 -mavx2 -mpclmul -march=native -O3 -fprofile-use
 CFLAGS = -Wall -Wextra -Weffc++ -fPIC -std=c++11 -O3 -fopenmp 
-CPPFLAGS = -std=c++11 -L./ -lgcov -llapack -llapacke -lm -lgomp
+CPPFLAGS = -std=c++11 -L./ -L./libs/ -lgcov -llapack -llapacke -lm -lgomp
 #CPPFLAGS = -std=c++11 -L ./ -lpthread
 INC = -I ./include -I ./src 
 LDFLAGS =  -shared
+WIN_LDFLAGS =  -static-libstdc++ static -static-libgcc -static-libstdc++ -lwinpthread -Wl,--subsystem,windows -mwindows
 SRCDIR  = ./src/
 
 #gtest specific setup
@@ -65,10 +70,13 @@ $(CPP_OBJ_FILES) \
 $(CPPFLAGS) $(GTEST_CPP_FLAGS$) $(INC) -I $(GTEST_INC_DIR) /usr/lib/libgtest.a -lpthread -o ./test/allTests
 
 obj/%.o: src/%.cpp
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(INC) -c -o $@ $<
+	$(CPP) $(CFLAGS) $(CPPFLAGS) $(INC) -c -o $@ $<
 
-libfreewake.so: obj/liftingsurface.o obj/horseshoelattice.o obj/simulationmanager.o obj/vec3d.o obj/vortexlattice.o obj/vortexmath.o
-	$(CPP) $(CPP_OBJ_FILES) $(CPPFLAGS) $(INC) $(LDFLAGS) -o ./libs/libfreewake.so 
+libfreewake.so: obj/liftingsurface.o obj/horseshoelattice.o obj/simulationmanager.o obj/tipfilament.o obj/vec3d.o obj/vortexlattice.o obj/vortexmath.o 
+	$(CPP) $(CPP_OBJ_FILES) $(CPPFLAGS) $(INC) $(LDFLAGS) -o ./libs/libfreewake.so
+
+libfreewake.dll: obj/liftingsurface.o obj/horseshoelattice.o obj/simulationmanager.o obj/tipfilament.o obj/vec3d.o obj/vortexlattice.o obj/vortexmath.o 
+	$(WIN_CPP) $(CPP_OBJ_FILES) $(CPPFLAGS) $(INC) $(WIN_LDFLAGS) -o ./libs/libfreewake.dll
 
 check: 
 	./test/allTests

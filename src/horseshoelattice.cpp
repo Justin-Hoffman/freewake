@@ -3,6 +3,10 @@
 #include "vortexmath.h"
 #include "stdio.h"
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 HorseshoeLattice::HorseshoeLattice() : rc_(1E-6), ni_( 1 ), nj_( 1 ), chordwiseSpacing_( PointSpacing::Linear ), spanwiseSpacing_(PointSpacing::Linear), 
                                  hasTrailers_( false ), trailerVec_( 0.0, 0.0, 0.0 ), 
                                  endPoints( 2, std::vector<Vec3D>( 2, Vec3D(0.0, 0.0, 0.0) ) ), 

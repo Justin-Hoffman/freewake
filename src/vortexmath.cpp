@@ -4,6 +4,9 @@
 #include "stdio.h"
 #include "vortexmath.h"
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 Vec3D BiotSavart( Vec3D &r1, Vec3D &r2, double rc ){
     /*Vec3D ds = (r2-r1);
