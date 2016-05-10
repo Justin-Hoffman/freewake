@@ -54,7 +54,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         sm.setGlobalRotationAxis( Vec3D(0.0, 0.0, 1.0).rotate(Vec3D(0.0, 0.0, 0.0), Vec3D(0.0, 1.0, 0.0), -0.0*M_PI/180.0 ) );
         sm.setGlobalRotationRate( omega );
         
-        int nt = 250;
+        int nt = 800;
         int nFields = 22;
         int nSurfaces = sm.getNSurfaces();
         const char* fieldNames[] = {"xSurface","ySurface","zSurface","xWake","yWake", "zWake","xCp","yCp","zCp","xTipFilament","yTipFilament", "zTipFilament", "xSpanwiseForce", "ySpanwiseForce", "zSpanwiseForce", 
@@ -136,7 +136,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         double time = 0;
         // mexprintf("Solve\n");
         while ( nStep < nt ){
-            sm.stepPC2B();
+            sm.stepPCC();
             time += sm.dt();
                 for(int iSurface = 0; iSurface < nSurfaces; iSurface++){
                     LiftingSurface &l = sm.getSurface( iSurface );

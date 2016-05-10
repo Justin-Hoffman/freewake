@@ -80,7 +80,7 @@ void SimulationManager::step(){
     calculateWakeVelocities();
     advectWake();
     matchFirstWakePointsToSurface();
-    calculateWakeVelocities();
+    calculateWakeVelocitiesLinearOnly();
     //Reset X,Y,Z,Gamma, but use new wake velocity
     for (int h = 0; h < (int) surfaces_.size(); h++){
         VortexLattice &vl = surfaces_[h]->getVortexLattice();
@@ -136,7 +136,7 @@ void SimulationManager::stepPCC(){
     //Do time step to get velocities for PCC
     solve();
     calculateWakeVelocities();
-    advectWake();
+    advectWakePCC();
     matchFirstWakePointsToSurface();
     calculateWakeVelocities();
     //Reset X,Y,Z,Gamma, but use average wake velocity
@@ -167,11 +167,11 @@ void SimulationManager::stepPCC(){
         }
     }
     //Apply explicit relaxation
-    advectWake();
+    advectWakePCC();
     fillWakeBC();
     
     //Apply explicit relaxation
-    double eps = 0.99;
+    double eps = 0.9;
     for (int h = 0; h < (int) surfaces_.size(); h++){
         VortexLattice &vl = surfaces_[h]->getVortexLattice();
         VortexLattice &vlold = originalSurfaces[h].getVortexLattice();
@@ -448,6 +448,47 @@ void SimulationManager::integrateForceAndMoment(){
     fomo_.aeroForceCoeff = fomo_.aeroForce /  (1.0/2.0 * refV_ * refV_ * refSurf_.S );
 }
 
+void SimulationManager::calculateWakeVelocitiesLinearOnly(){
+    //For every surface
+    for( int h = 0; h < (int) surfaces_.size(); h++ ){
+        LiftingSurface* s = surfaces_[h];
+        if  ( s->freeWake() ){ //If surface is a free wake case we need to calculate wake velocity
+            VortexLattice& vl = s->getVortexLattice();
+            //For end points along span and wake
+            for(int i = 0; i < s->nSpan()+1; i++){ 
+                for(int j = 0; j < s->nWake(); j++){ 
+                    Vec3D thisEndPoint = vl.endPoints()[i][j];
+                    Vec3D vInduced = Vec3D();
+                    //Iterate through all other surfaces to find net induced velocity 
+                    for( int hj = 0; hj < (int) surfaces_.size(); hj++ ){
+                        LiftingSurface* sj = surfaces_[hj];
+                        if (j > 0) vInduced += sj->calcInducedVelocity( thisEndPoint );
+                    }//hj
+                    Vec3D vInf  = vInfinityLinearOnly();
+                    vl.endPointVelocity()[i][j] = vInduced + vInf;
+                }
+            }
+        }
+        if  ( s->freeTipVortex() ){ //If surface has a free tip filament we need to calculate wake velocity
+            TipFilament& tf = s->getTipFilament();
+            //For two tip vortex filaments
+            for(int i = 0; i < 2; i++){ 
+                for(int j = 0; j < s->nFilament(); j++){ 
+                    Vec3D thisEndPoint = tf.endPoints()[i][j];
+                    Vec3D vInduced = Vec3D();
+                    //Iterate through all other surfaces to find net induced velocity 
+                    for( int hj = 0; hj < (int) surfaces_.size(); hj++ ){
+                        LiftingSurface* sj = surfaces_[hj];
+                        if (j > 0) vInduced += sj->calcInducedVelocity( thisEndPoint );
+                    }//hj
+                    Vec3D vInf  = vInfinityLinearOnly();
+                    tf.endPointVelocity()[i][j] = vInduced + vInf;
+                }
+            }
+        }
+    }
+}
+
 void SimulationManager::calculateWakeVelocities(){
     //For every surface
     for( int h = 0; h < (int) surfaces_.size(); h++ ){
@@ -465,7 +506,6 @@ void SimulationManager::calculateWakeVelocities(){
                         if (j > 0) vInduced += sj->calcInducedVelocity( thisEndPoint );
                     }//hj
                     Vec3D vInf  = vInfinity( thisEndPoint );
-                    //Vec3D vInf  = vInfinityLinearOnly();
                     vl.endPointVelocity()[i][j] = vInduced + vInf;
                 }
             }
@@ -483,7 +523,6 @@ void SimulationManager::calculateWakeVelocities(){
                         if (j > 0) vInduced += sj->calcInducedVelocity( thisEndPoint );
                     }//hj
                     Vec3D vInf  = vInfinity( thisEndPoint );
-                    //Vec3D vInf  = vInfinityLinearOnly();
                     tf.endPointVelocity()[i][j] = vInduced + vInf;
                 }
             }
@@ -501,6 +540,20 @@ void SimulationManager::advectWake(){
             TipFilament& tf = s->getTipFilament();
             tf.fixToWake( vl );
             tf.advectAndRotate( dt_, globalRotationAxis_, globalRotationRate_ );
+        }
+    }
+}
+
+void SimulationManager::advectWakePCC(){
+    //For every surface
+    for( int h = 0; h < (int) surfaces_.size(); h++ ){
+        LiftingSurface* s = surfaces_[h];
+        if  ( s->freeWake() ){ //If surface is a free wake case we need to calculate wake velocity
+            VortexLattice& vl = s->getVortexLattice();
+            vl.advectPCC( dt_, globalRotationAxis_, globalRotationRate_ );
+            TipFilament& tf = s->getTipFilament();
+            tf.fixToWake( vl );
+            tf.advectPCC( dt_, globalRotationAxis_, globalRotationRate_ );
         }
     }
 }

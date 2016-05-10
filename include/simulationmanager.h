@@ -29,8 +29,10 @@ class SimulationManager {
         
         void addSurface( LiftingSurface* s);
         void advectWake();
+        void advectWakePCC();
         void advectWakePC2B();
         void calculateWakeVelocities();
+        void calculateWakeVelocitiesLinearOnly();
         void fillWakeBC();
         void matchFirstWakePointsToSurface();
         void setGlobalLinearVelocity( Vec3D v );

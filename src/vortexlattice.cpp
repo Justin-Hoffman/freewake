@@ -120,13 +120,36 @@ void VortexLattice::advectAndRotate( double dt, Vec3D axis, double omega ){
     }    
 }
 
+void VortexLattice::advectPCC( double dt, Vec3D axis, double omega ){
+    for ( int i = ni_-1; i > -1; i--){
+        Vec3D pjp1tp0 = Vec3D(endPoints_[i][0]), pjp0tp0 = Vec3D(endPoints_[i][0]); //Points at this time at 2 wake ages
+        for (int j = 0; j < nj_-1; j++){
+            pjp0tp0 = Vec3D(pjp1tp0);     //Point at j for current time is whatever we had saved
+            pjp1tp0 = endPoints_[i][j+1]; //Save point at j+1 for current time
+            endPoints_[i][j+1] = ( (endPointV_[i][j] + endPointV_[i][j+1]) / 1.0 * dt - ( 1.0-1.0) *       endPoints_[i][j] // j+1 t+1 is RHS
+                                                                                      - (-1.0-1.0) *   pjp0tp0              - (-1.0+1.0) *   pjp1tp0 ) / (1.0+1.0);
+        }
+    }    
+    for ( int i = ni_-1; i > -1; i--){
+        for (int j = nj_-1; j > 0; j--){
+            if ( i < ni_-1 ){
+                gammaI_[i][j] = gammaI_[i][j-1];
+                rcI_[i][j] = VortexCoreGrowth( rcI_[i][j-1], dt );
+            }
+            if ( j < nj_-1 ){
+                gammaJ_[i][j] = gammaJ_[i][j-1];
+                rcJ_[i][j] = VortexCoreGrowth( rcJ_[i][j-1], dt );
+            }
+        }
+    }
+}
+
 void VortexLattice::advectPC2B( double dt, Vec3D axis, double omega, VortexLattice& old, VortexLattice& older ){
     for ( int i = ni_-1; i > -1; i--){
         Vec3D pjp1tp0 = Vec3D(endPoints_[i][0]), pjp0tp0 = Vec3D(endPoints_[i][0]); //Points at this time at 2 wake ages
         for (int j = 0; j < nj_-1; j++){
             pjp0tp0 = Vec3D(pjp1tp0);     //Point at j for current time is whatever we had save
             pjp1tp0 = endPoints_[i][j+1]; //Save point at j+1 for current time
-            //Vec3D vInf =  ( ( (pjp0tp0+pjp1tp0)/2.0 ).rotate(Vec3D(0.0,0.0, 0.0), axis, dt*omega ) - (pjp0tp0+pjp1tp0)/2.0 )/dt;
             endPoints_[i][j+1] = ( (endPointV_[i][j] + endPointV_[i][j+1])/1.0 * dt - ( 3.0/4.0-1.0) *       endPoints_[i][j] // j+1 t+1 is RHS 
                                                                                     - (-1.0/4.0-1.0) *   pjp0tp0              - (-1.0/4.0+1.0) *   pjp1tp0
                                                                                     - (-3.0/4.0+0.0) *   old.endPoints_[i][j] - (-3.0/4.0+0.0) *   old.endPoints_[i][j+1]
