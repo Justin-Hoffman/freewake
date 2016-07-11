@@ -5,30 +5,31 @@
 extern void _main();
 extern "C"
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){ 
-        double omega = 176.0; //Roughly mach 0.6 for a 7.5 ft span rotor (Caradonna Tung Rotor)
-        double dt = 2.0*M_PI/ omega / 40.0;
-        double r = 6.0; 
-        double c = 1.0;
-        double refA = M_PI * r * r;
-        ReferenceSurface refS = ReferenceSurface( refA, r, c);
-        refS.pgCorrection = true;
-        refS.vMach = 1100.0;
+        
+        MatlabInterfaceStruct inArgs = validateArgs( nrhs, prhs);
+
+        double omega = inArgs.omega;
+        double dt = inArgs.dt;
+        ReferenceSurface refS = ReferenceSurface( inArgs.refA, inArgs.refL, inArgs.refC);
+        refS.pgCorrection = inArgs.doPrandtlGlauert;
+        refS.vMach = inArgs.vMach;
+
         //Run Simulation
         SimulationManager sm = SimulationManager();
-        sm.setReferenceVelocity( omega * r );
+        sm.setReferenceVelocity( inArgs.refV );
         sm.setDt( dt );
-        sm.setReferenceSurface( ReferenceSurface( refA, r, c) );
-        LiftingSurface ls = LiftingSurface(21,9,170,2);
-        ls.setFreeWake( true );
-        ls.setFreeTipVortex( true );
-        ls.setAspectRatio( 5.25 );
-        ls.setPitch( 5.0 * M_PI / 180.0 );
+        sm.setReferenceSurface( refS );
+        LiftingSurface ls = LiftingSurface(inArgs.nSpan,inArgs.nChord,inArgs.nNearWake,inArgs.nFarWake);
+        ls.setFreeWake( inArgs.isFreeWake );
+        ls.setFreeTipVortex( inArgs.isFreeTipVortex );
+        ls.setAspectRatio( inArgs.surfaceAR );
+        ls.setPitch( inArgs.surfacePitch );
         ls.setCoreRadius( 1E-3 );
-        ls.setTipDihedral( 0.0 * M_PI/180.0 );
-        ls.setTipDihedralBreak( .9*5.25/6.0 );
+        ls.setTipDihedral( inArgs.surfaceTipDihedral );
+        ls.setTipDihedralBreak( inArgs.surfaceTipDihedralBreak );
         ls.getHorseshoeLattice().spanwiseSpacing(PointSpacing::Cosine);
         ls.getHorseshoeLattice().chordwiseSpacing(PointSpacing::Cosine);
-        ls.getHorseshoeLattice().setHasTrailers(false); 
+        ls.getHorseshoeLattice().setHasTrailers( inArgs.hasFixedTrailers ); 
         ls.updateLattice( );
         ls.getHorseshoeLattice().translate( Vec3D(0.0, 0.75, 0.0) );
         ls.getVortexLattice().fixToTrailingEdge( ls.getHorseshoeLattice() );
@@ -38,8 +39,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         ls.getTipFilament().initializeToHelix( Vec3D(0.0, 0.0, 1.0), (omega)*sm.dt(), -0.0 );
 
         LiftingSurface ls2 = LiftingSurface(ls);
-        ls2.setFreeWake( true );
-        ls.setFreeTipVortex( true );
+        ls2.setFreeWake( inArgs.isFreeWake );
+        ls.setFreeTipVortex( inArgs.isFreeTipVortex );
         ls2.getHorseshoeLattice().rotate(  Vec3D(0.0,0.0,0.0), Vec3D(0.0, 0.0, -1.0), M_PI );
         ls2.getVortexLattice().fixToTrailingEdge( ls2.getHorseshoeLattice() );
         ls2.getVortexLattice().initializeToHelix( Vec3D(0.0, 0.0, 1.0), (omega)*sm.dt(), -0.0 );
@@ -50,15 +51,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         
         sm.addSurface(&ls);
         sm.addSurface(&ls2);
-        sm.setGlobalLinearVelocity( Vec3D(0.0, 0.0, 0.0).rotate(Vec3D(0.0, 0.0, 0.0), Vec3D(0.0, 1.0, 0.0), -0.0*M_PI/180.0 ) );
-        sm.setGlobalRotationAxis( Vec3D(0.0, 0.0, 1.0).rotate(Vec3D(0.0, 0.0, 0.0), Vec3D(0.0, 1.0, 0.0), -0.0*M_PI/180.0 ) );
+        sm.setGlobalLinearVelocity( inArgs.globalLinearVelocity.rotate(Vec3D(0.0, 0.0, 0.0), Vec3D(0.0, 1.0, 0.0), -0.0*M_PI/180.0 ) );
+        sm.setGlobalRotationAxis( inArgs.globalRotationAxis.rotate(Vec3D(0.0, 0.0, 0.0), Vec3D(0.0, 1.0, 0.0), -0.0*M_PI/180.0 ) );
         sm.setGlobalRotationRate( omega );
         
-        int nt = 900;
-        int nFields = 23;
+        int nt = inArgs.nt;
+
+        int nFields = 24;
         int nSurfaces = sm.getNSurfaces();
         const char* fieldNames[] = {"xSurface","ySurface","zSurface","xWake","yWake", "zWake","xCp","yCp","zCp","xTipFilament","yTipFilament", "zTipFilament", "rcTip", "xSpanwiseForce", "ySpanwiseForce", "zSpanwiseForce", 
-                                    "CFX","CFY","CFZ","CMX","CMY","CMZ", "T"}; 
+                                    "CFX","CFY","CFZ","CMX","CMY","CMZ", "T", "InputParameters"}; 
         plhs[0] = mxCreateStructMatrix(1, nSurfaces , nFields, fieldNames);
         mxArray** xsurf = (mxArray**) malloc( nSurfaces * sizeof( mxArray* ) );
         mxArray** ysurf = (mxArray**) malloc( nSurfaces * sizeof( mxArray* ) );
@@ -273,6 +275,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
                     mxSetFieldByNumber(plhs[0],iSurface,20, cmz[iSurface] );
                     mxSetFieldByNumber(plhs[0],iSurface,21, cmz[iSurface] );
                     mxSetFieldByNumber(plhs[0],iSurface,22, t[iSurface]);
+                    mxSetFieldByNumber(plhs[0],iSurface,23, mxDuplicateArray(prhs[0]) );
                     
                 } 
                 mexCallMATLAB(0, NULL, 1, plhs, "plotState");
@@ -287,5 +290,178 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
     free(cfx); free(cfy); free(cfz); 
     free(cmx); free(cmy); free(cmz); 
     free(t); 
+}
+
+MatlabInterfaceStruct validateArgs( int nrhs, const mxArray *prhs[] ) {
+    MatlabInterfaceStruct inArgs;
+    mxArray *val;
+    if (nrhs != 1 ){
+        mexErrMsgIdAndTxt("Freewake:InvalidArgumentCount", "Function called with other than 1 argument.");
+    }
+    
+    val = mxGetField( prhs[0], 0, "omega");
+    if (val == 0){
+        mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: omega");
+    } else {
+        inArgs.omega = *mxGetPr(val);
+    }
+    
+    val = mxGetField( prhs[0], 0, "dt");
+    if (val == 0){
+        mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: dt");
+    } else {
+        inArgs.dt = *mxGetPr(val);
+    }
+   
+    val = mxGetField( prhs[0], 0, "nt");
+    if (val == 0){
+        mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: nt");
+    } else {
+        inArgs.nt = (int) *mxGetPr(val);
+    }
+
+    val = mxGetField( prhs[0], 0, "globalLinearVelocity");
+    if (val == 0){
+        mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: globalLinearVelocity");
+    } else {
+        double* pr = mxGetPr(val);
+        inArgs.globalLinearVelocity = Vec3D( pr[0], pr[1], pr[2]);
+    }
+
+    val = mxGetField( prhs[0], 0, "globalRotationAxis");
+    if (val == 0){
+        mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: globalRotationAxis");
+    } else {
+        double* pr = mxGetPr(val);
+        inArgs.globalRotationAxis = Vec3D( pr[0], pr[1], pr[2] );
+    }
+
+    val = mxGetField( prhs[0], 0, "refL");
+    if (val == 0){
+        mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: refL");
+    } else {
+        inArgs.refL = *mxGetPr(val);
+    }
+
+    val = mxGetField( prhs[0], 0, "refC");
+    if (val == 0){
+        mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: refC");
+    } else {
+        inArgs.refC = *mxGetPr(val);
+    }
+
+    val = mxGetField( prhs[0], 0, "refA");
+    if (val == 0){
+        mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: refA");
+    } else {
+        inArgs.refA = *mxGetPr(val);
+    }
+
+    val = mxGetField( prhs[0], 0, "refV");
+    if (val == 0){
+        mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: refV");
+    } else {
+        inArgs.refV = *mxGetPr(val);
+    }
+
+    val = mxGetField( prhs[0], 0, "vMach");
+    if (val == 0){
+        mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: vMach");
+    } else {
+        inArgs.vMach = *mxGetPr(val);
+    }
+
+    val = mxGetField( prhs[0], 0, "nSurfaces");
+    if (val == 0){
+        mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: nSurfaces");
+    } else {
+        inArgs.nSurfaces = (int) *mxGetPr(val);
+    }
+
+    val = mxGetField( prhs[0], 0, "nChord");
+    if (val == 0){
+        mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: nChord");
+    } else {
+        inArgs.nChord = (int) *mxGetPr(val);
+    }
+
+    val = mxGetField( prhs[0], 0, "nSpan");
+    if (val == 0){
+        mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: nSpan");
+    } else {
+        inArgs.nSpan = (int) *mxGetPr(val);
+    }
+
+    val = mxGetField( prhs[0], 0, "nNearWake");
+    if (val == 0){
+        mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: nNearWake");
+    } else {
+        inArgs.nNearWake = (int) *mxGetPr(val);
+    }
+
+    val = mxGetField( prhs[0], 0, "nFarWake");
+    if (val == 0){
+        mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: nFarWake");
+    } else {
+        inArgs.nFarWake = (int) *mxGetPr(val);
+    } 
+
+    val = mxGetField( prhs[0], 0, "surfaceAR");
+    if (val == 0){
+        mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: surfaceAR");
+    } else {
+        inArgs.surfaceAR = *mxGetPr(val);
+    }
+
+    val = mxGetField( prhs[0], 0, "surfacePitch");
+    if (val == 0){
+        mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: surfacePitch");
+    } else {
+        inArgs.surfacePitch = *mxGetPr(val);
+    }
+
+    val = mxGetField( prhs[0], 0, "surfaceTipDihedral");
+    if (val == 0){
+        mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: surfaceTipDihedral");
+    } else {
+        inArgs.surfaceTipDihedral = *mxGetPr(val);
+    }
+
+    val = mxGetField( prhs[0], 0, "surfaceTipDihedralBreak");
+    if (val == 0){
+        mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: surfaceTipDihedralBreak");
+    } else {
+        inArgs.surfaceTipDihedralBreak = *mxGetPr(val);
+    }
+
+    val = mxGetField( prhs[0], 0, "isFreeWake");
+    if (val == 0){
+        mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: isFreeWake");
+    } else {
+        inArgs.isFreeWake = (bool) *mxGetPr(val);
+    }
+
+    val = mxGetField( prhs[0], 0, "isFreeTipVortex");
+    if (val == 0){
+        mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: isFreeTipVortex");
+    } else {
+        inArgs.isFreeTipVortex = (bool) *mxGetPr(val);
+    }
+
+    val = mxGetField( prhs[0], 0, "hasFixedTrailers");
+    if (val == 0){
+        mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: hasFixedTrailers");
+    } else {
+        inArgs.hasFixedTrailers = (bool) *mxGetPr(val);
+    }
+
+    val = mxGetField( prhs[0], 0, "doPrandtlGlauert");
+    if (val == 0){
+        mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: doPrandtlGlauert");
+    } else {
+        inArgs.doPrandtlGlauert = (bool) *mxGetPr(val);
+    }
+
+    return inArgs;
 }
 
