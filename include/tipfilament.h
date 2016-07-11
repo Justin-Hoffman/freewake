@@ -21,6 +21,7 @@ class TipFilament : public VortexContainer{
         
         std::vector< std::vector<Vec3D> >& endPoints();
         std::vector< std::vector<Vec3D> >& endPointVelocity();
+        std::vector< std::vector<Vec3D> >& endPointVelocityOld();
         std::vector< std::vector<double> >& gamma();
         std::vector< std::vector<double> >& rc();
 
@@ -44,6 +45,7 @@ class TipFilament : public VortexContainer{
 
         std::vector< std::vector<Vec3D> > endPoints_;
         std::vector< std::vector<Vec3D> > endPointV_;
+        std::vector< std::vector<Vec3D> > endPointVold_;
         std::vector< std::vector<double> > gamma_;
         std::vector< std::vector<double> > rc_;
 

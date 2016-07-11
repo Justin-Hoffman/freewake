@@ -89,7 +89,7 @@ void LiftingSurface::setAspectRatio( double AR ){
 
 void LiftingSurface::setCoreRadius( double rc ){
     rc_ = rc;
-    horseshoeLattice_.setRc( rc );
+    horseshoeLattice_.setRc( rc*10.0 );
 }
 
 double LiftingSurface::getSpan(){

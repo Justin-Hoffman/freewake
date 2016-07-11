@@ -77,7 +77,7 @@ void SimulationManager::step(){
 
     //Do half time step for first part of RK2::
     solve();
-    calculateWakeVelocities();
+    calculateWakeVelocitiesLinearOnly();
     advectWake();
     matchFirstWakePointsToSurface();
     calculateWakeVelocitiesLinearOnly();
@@ -98,7 +98,7 @@ void SimulationManager::step(){
             tv.rc() = std::vector<std::vector<double> >(tvold.rc());
         }
     }
-    double eps = 0.95;
+    double eps = 1.00;
     dt_ = dt;
     advectWake();
     fillWakeBC();
@@ -136,7 +136,7 @@ void SimulationManager::stepPCC(){
     //Do time step to get velocities for PCC
     solve();
     calculateWakeVelocities();
-    advectWakePCC();
+    advectWakeEuler();
     matchFirstWakePointsToSurface();
     calculateWakeVelocities();
     //Reset X,Y,Z,Gamma, but use average wake velocity
@@ -154,6 +154,9 @@ void SimulationManager::stepPCC(){
             tv.endPoints() = std::vector<std::vector<Vec3D> >(tvold.endPoints());
             tv.gamma() = std::vector<std::vector<double> >(tvold.gamma());
             tv.rc() = std::vector<std::vector<double> >(tvold.rc());
+            vl.endPointVelocityOld() = std::vector<std::vector<Vec3D> > ( vlold.endPointVelocity() );
+            tv.endPointVelocityOld() = std::vector<std::vector<Vec3D> > ( tvold.endPointVelocity() );
+            /*
             for(int i = 0; i < vl.ni(); i++){
                 for( int j = 0; j < vl.nj(); j++){
                     vl.endPointVelocity()[i][j] = (vl.endPointVelocity()[i][j] + vlold.endPointVelocity()[i][j] ) /2.0;
@@ -164,14 +167,15 @@ void SimulationManager::stepPCC(){
                     tv.endPointVelocity()[i][j] = (tv.endPointVelocity()[i][j] + tvold.endPointVelocity()[i][j] ) /2.0;
                 }
             }
+            */
         }
     }
     //Apply explicit relaxation
     advectWakePCC();
     fillWakeBC();
     
-    //Apply explicit relaxation
-    double eps = 0.9;
+    /*Apply explicit relaxation
+    double eps = 1.00;
     for (int h = 0; h < (int) surfaces_.size(); h++){
         VortexLattice &vl = surfaces_[h]->getVortexLattice();
         VortexLattice &vlold = originalSurfaces[h].getVortexLattice();
@@ -192,6 +196,7 @@ void SimulationManager::stepPCC(){
             }
         }
     }
+    */
     matchFirstWakePointsToSurface();
 }
  
@@ -236,7 +241,7 @@ void SimulationManager::stepPC2B(){
     advectWakePC2B();
     fillWakeBC();
     //Apply explicit relaxation
-    double eps = 0.99;
+    double eps = 1.00;
     for (int h = 0; h < (int) surfaces_.size(); h++){
         VortexLattice &vl = surfaces_[h]->getVortexLattice();
         VortexLattice &vlold = originalSurfaces[h].getVortexLattice();
@@ -544,16 +549,30 @@ void SimulationManager::advectWake(){
     }
 }
 
-void SimulationManager::advectWakePCC(){
+void SimulationManager::advectWakeEuler(){
     //For every surface
     for( int h = 0; h < (int) surfaces_.size(); h++ ){
         LiftingSurface* s = surfaces_[h];
         if  ( s->freeWake() ){ //If surface is a free wake case we need to calculate wake velocity
             VortexLattice& vl = s->getVortexLattice();
-            vl.advectPCC( dt_, globalRotationAxis_, globalRotationRate_ );
+            vl.advect( dt_ );
             TipFilament& tf = s->getTipFilament();
             tf.fixToWake( vl );
+            tf.advect( dt_ );
+        }
+    }
+}
+
+void SimulationManager::advectWakePCC(){
+    //For every surface
+    for( int h = 0; h < (int) surfaces_.size(); h++ ){
+        LiftingSurface* s = surfaces_[h];
+        if  ( s->freeWake() ){ //If surface is a free wake case we need to calculate wake velocity
+            TipFilament& tf = s->getTipFilament();
             tf.advectPCC( dt_, globalRotationAxis_, globalRotationRate_ );
+            VortexLattice& vl = s->getVortexLattice();
+            vl.advectPCC( dt_, globalRotationAxis_, globalRotationRate_ );
+            tf.fixToWake( vl );
         }
     }
 }
@@ -563,11 +582,11 @@ void SimulationManager::advectWakePC2B(){
     for( int h = 0; h < (int) surfaces_.size(); h++ ){
         LiftingSurface* s = surfaces_[h];
         if  ( s->freeWake() ){ //If surface is a free wake case we need to calculate wake velocity
+            TipFilament& tf = s->getTipFilament();
+            tf.advectPC2B( dt_, globalRotationAxis_, globalRotationRate_, oldSurfaces_[h]->getTipFilament(), olderSurfaces_[h]->getTipFilament() );
             VortexLattice& vl = s->getVortexLattice();
             vl.advectPC2B( dt_, globalRotationAxis_, globalRotationRate_, oldSurfaces_[h]->getVortexLattice(), olderSurfaces_[h]->getVortexLattice() );
-            TipFilament& tf = s->getTipFilament();
             tf.fixToWake( vl );
-            tf.advectPC2B( dt_, globalRotationAxis_, globalRotationRate_, oldSurfaces_[h]->getTipFilament(), olderSurfaces_[h]->getTipFilament() );
         }
     }
 }
@@ -590,7 +609,7 @@ void SimulationManager::fillWakeBC(){
             vl.fixToTrailingEdge( s->getHorseshoeLattice() );
             //For end points along span and wake
             for(int i = 0; i < s->nSpan()+1; i++){
-                if ( i < s->nSpan() ) vl.gammaI()[i][0] = (lastGamma_[h][i] - thisGamma_[h][i])*.25;
+                if ( i < s->nSpan() ) vl.gammaI()[i][0] = (lastGamma_[h][i] - thisGamma_[h][i])*0.25;
                 if ( i > 0 && i < s->nSpan() ) {   
                     vl.gammaJ()[i][0] = lastGamma_[h][i-1] - lastGamma_[h][i]; 
                 } else if ( i == s->nSpan() ) {   

@@ -29,6 +29,7 @@ class SimulationManager {
         
         void addSurface( LiftingSurface* s);
         void advectWake();
+        void advectWakeEuler();
         void advectWakePCC();
         void advectWakePC2B();
         void calculateWakeVelocities();

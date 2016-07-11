@@ -5,6 +5,7 @@
 VortexLattice::VortexLattice() : ni_( 2 ), nj_( 2 ), 
                                  endPoints_( 2, std::vector<Vec3D>( 2, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  endPointV_( 2, std::vector<Vec3D>( 2, Vec3D(0.0, 0.0, 0.0) ) ), 
+                                 endPointVold_( 2, std::vector<Vec3D>( 2, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  gammaI_( 1, std::vector<double>( 2, 0.0  ) ) , 
                                  rcI_( 1, std::vector<double>( 2, 1.E-2  ) ) , 
                                  gammaJ_( 2, std::vector<double>( 1, 0.0  ) ) ,
@@ -16,6 +17,7 @@ VortexLattice::VortexLattice( int ni, int nj ) :
                                  ni_( ni ), nj_( nj ),
                                  endPoints_( ni, std::vector<Vec3D>( nj, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  endPointV_( ni, std::vector<Vec3D>( nj, Vec3D(0.0, 0.0, 0.0) ) ), 
+                                 endPointVold_( ni, std::vector<Vec3D>( nj, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  gammaI_( ni-1, std::vector<double>( nj, 0.0  ) ), 
                                  rcI_( ni-1, std::vector<double>( nj, 1.E-2  ) ), 
                                  gammaJ_( ni, std::vector<double>( nj-1, 0.0  ) ),
@@ -27,6 +29,7 @@ VortexLattice::VortexLattice( const VortexLattice &v ) :
                                  ni_( v.ni_ ), nj_( v.nj_ ),
                                  endPoints_( v.endPoints_ ),
                                  endPointV_( v.endPointV_ ),
+                                 endPointVold_( v.endPointV_ ),
                                  gammaI_( v.gammaI_ ), 
                                  rcI_( v.rcI_ ), 
                                  gammaJ_( v.gammaJ_ ),
@@ -126,7 +129,7 @@ void VortexLattice::advectPCC( double dt, Vec3D axis, double omega ){
         for (int j = 0; j < nj_-1; j++){
             pjp0tp0 = Vec3D(pjp1tp0);     //Point at j for current time is whatever we had saved
             pjp1tp0 = endPoints_[i][j+1]; //Save point at j+1 for current time
-            endPoints_[i][j+1] = ( (endPointV_[i][j] + endPointV_[i][j+1]) / 1.0 * dt - ( 1.0-1.0) *       endPoints_[i][j] // j+1 t+1 is RHS
+            endPoints_[i][j+1] = ( (endPointVold_[i][j] + endPointVold_[i][j+1] + endPointV_[i][j] + endPointV_[i][j+1] ) / 2.0 * dt - ( 1.0-1.0) *       endPoints_[i][j] // j+1 t+1 is RHS
                                                                                       - (-1.0-1.0) *   pjp0tp0              - (-1.0+1.0) *   pjp1tp0 ) / (1.0+1.0);
         }
     }    
@@ -150,10 +153,15 @@ void VortexLattice::advectPC2B( double dt, Vec3D axis, double omega, VortexLatti
         for (int j = 0; j < nj_-1; j++){
             pjp0tp0 = Vec3D(pjp1tp0);     //Point at j for current time is whatever we had save
             pjp1tp0 = endPoints_[i][j+1]; //Save point at j+1 for current time
-            endPoints_[i][j+1] = ( (endPointV_[i][j] + endPointV_[i][j+1])/1.0 * dt - ( 3.0/4.0-1.0) *       endPoints_[i][j] // j+1 t+1 is RHS 
-                                                                                    - (-1.0/4.0-1.0) *   pjp0tp0              - (-1.0/4.0+1.0) *   pjp1tp0
-                                                                                    - (-3.0/4.0+0.0) *   old.endPoints_[i][j] - (-3.0/4.0+0.0) *   old.endPoints_[i][j+1]
-                                                                                    - ( 1.0/4.0+0.0) * older.endPoints_[i][j] - ( 1.0/4.0+0.0) * older.endPoints_[i][j+1]) / ( 3.0/4.0+1.0 );
+            if ( j > 1 ){
+                endPoints_[i][j+1] = ( (endPointV_[i][j] + endPointV_[i][j+1])/1.0 * dt - ( 3.0/4.0-1.0) *       endPoints_[i][j] // j+1 t+1 is RHS 
+                                                                                        - (-1.0/4.0-1.0) *   pjp0tp0              - (-1.0/4.0+1.0) *   pjp1tp0
+                                                                                        - (-3.0/4.0+0.0) *   old.endPoints_[i][j] - (-3.0/4.0+0.0) *   old.endPoints_[i][j+1]
+                                                                                        - ( 1.0/4.0+0.0) * older.endPoints_[i][j] - ( 1.0/4.0+0.0) * older.endPoints_[i][j+1]) / ( 3.0/4.0+1.0 );
+            } else {
+                endPoints_[i][j+1] = ( (endPointV_[i][j] + endPointV_[i][j+1]) / 1.0 * dt - ( 1.0-1.0) *       endPoints_[i][j] // j+1 t+1 is RHS
+                                                                                          - (-1.0-1.0) *   pjp0tp0              - (-1.0+1.0) *   pjp1tp0 ) / (1.0+1.0);
+            }
         }
     }
     for ( int i = ni_-1; i > -1; i--){
@@ -192,6 +200,10 @@ std::vector<std::vector<Vec3D>>& VortexLattice::endPoints(){
 
 std::vector<std::vector<Vec3D>>& VortexLattice::endPointVelocity(){
     return endPointV_;
+} 
+
+std::vector<std::vector<Vec3D>>& VortexLattice::endPointVelocityOld(){
+    return endPointVold_;
 } 
 
 std::vector<std::vector<double>>& VortexLattice::gammaI(){

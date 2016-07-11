@@ -20,6 +20,7 @@ class VortexLattice : public VortexContainer{
         
         std::vector< std::vector<Vec3D> >& endPoints();
         std::vector< std::vector<Vec3D> >& endPointVelocity();
+        std::vector< std::vector<Vec3D> >& endPointVelocityOld();
         std::vector< std::vector<double> >& gammaI();
         std::vector< std::vector<double> >& gammaJ();
         std::vector< std::vector<double> >& rcI();
@@ -45,6 +46,7 @@ class VortexLattice : public VortexContainer{
 
         std::vector< std::vector<Vec3D> > endPoints_;
         std::vector< std::vector<Vec3D> > endPointV_;
+        std::vector< std::vector<Vec3D> > endPointVold_;
         std::vector< std::vector<double> > gammaI_;
         std::vector< std::vector<double> > rcI_;
         std::vector< std::vector<double> > gammaJ_;

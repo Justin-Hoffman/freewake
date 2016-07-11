@@ -6,6 +6,7 @@
 TipFilament::TipFilament() : ni_( 2 ), nj_( 2 ), 
                                  endPoints_( 2, std::vector<Vec3D>( 2, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  endPointV_( 2, std::vector<Vec3D>( 2, Vec3D(0.0, 0.0, 0.0) ) ), 
+                                 endPointVold_( 2, std::vector<Vec3D>( 2, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  gamma_( 2, std::vector<double>( 1, 0.0  ) ) ,
                                  rc_( 2, std::vector<double>( 1, 5.E-1 ) ) {
  
@@ -15,6 +16,7 @@ TipFilament::TipFilament( int ni, int nj ) :
                                  ni_( ni ), nj_( nj ),
                                  endPoints_( ni, std::vector<Vec3D>( nj, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  endPointV_( ni, std::vector<Vec3D>( nj, Vec3D(0.0, 0.0, 0.0) ) ), 
+                                 endPointVold_( ni, std::vector<Vec3D>( nj, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  gamma_( ni, std::vector<double>( nj-1, 0.0  ) ), 
                                  rc_( ni, std::vector<double>( nj-1, 5.E-1  ) ){
  
@@ -24,6 +26,7 @@ TipFilament::TipFilament( const TipFilament &tf ) :
                                  ni_( tf.ni_ ), nj_( tf.nj_ ),
                                  endPoints_( tf.endPoints_ ),
                                  endPointV_( tf.endPointV_ ),
+                                 endPointVold_( tf.endPointVold_ ),
                                  gamma_( tf.gamma_ ),
                                  rc_( tf.rc_ ){
 }
@@ -100,16 +103,18 @@ void TipFilament::advectPCC( double dt, Vec3D axis, double omega ){
         for (int j = 0; j < nj_-1; j++){
             pjp0tp0 = Vec3D(pjp1tp0);     //Point at j for current time is whatever we had saved
             pjp1tp0 = endPoints_[i][j+1]; //Save point at j+1 for current time
-            endPoints_[i][j+1] = ( (endPointV_[i][j] + endPointV_[i][j+1]) / 1.0 * dt - ( 1.0-1.0) *       endPoints_[i][j] // j+1 t+1 is RHS
+            endPoints_[i][j+1] = ( (endPointVold_[i][j] + endPointVold_[i][j+1] + endPointV_[i][j] + endPointV_[i][j+1] ) / 2.0 * dt - ( 1.0-1.0) *       endPoints_[i][j] // j+1 t+1 is RHS
                                                                                       - (-1.0-1.0) *   pjp0tp0              - (-1.0+1.0) *   pjp1tp0 ) / (1.0+1.0);
+
+            //if(j > nj_-60){
+            //    endPoints_[i][j+1] = endPoints_[i][j].rotate( Vec3D(0.0,0.0,0.0), axis, omega*dt) + axis*0.04;
+            //}
         }
     }    
     for ( int i = ni_-1; i > -1; i--){
-        for (int j = nj_-1; j > 0; j--){
-            if ( j < nj_-1 ){
-                gamma_[i][j] = gamma_[i][j-1];
-                rc_[i][j] = VortexCoreGrowth( rc_[i][j-1], dt );
-            }
+        for (int j = nj_-2; j > 0; j--){
+            gamma_[i][j] = gamma_[i][j-1];
+            rc_[i][j] = VortexCoreGrowth( rc_[i][j-1], dt );
         }
     }    
 }
@@ -120,10 +125,15 @@ void TipFilament::advectPC2B( double dt, Vec3D axis, double omega, TipFilament& 
         for (int j = 0; j < nj_-1; j++){
             pjp0tp0 = Vec3D(pjp1tp0);     //Point at j for current time is whatever we had saved
             pjp1tp0 = endPoints_[i][j+1]; //Save point at j+1 for current time
-            endPoints_[i][j+1] = ( (endPointV_[i][j] + endPointV_[i][j+1]) / 1.0 * dt - ( 1.0-1.0) *       endPoints_[i][j] // j+1 t+1 is RHS
-                                                                                      - (-1.0-1.0) *   pjp0tp0              - (-1.0+1.0) *   pjp1tp0 ) / (1.0+1.0);
-                                                                                      //- (-3.0/4.0+0.0) *   old.endPoints_[i][j] - (-3.0/4.0+0.0) *   old.endPoints_[i][j+1]
-                                                                                      //- ( 1.0/4.0+0.0) * older.endPoints_[i][j] - ( 1.0/4.0+0.0) * older.endPoints_[i][j+1] ) / ( 3.0/4.0+1.0 );
+            if (j > 1){
+                endPoints_[i][j+1] = ( (endPointV_[i][j] + endPointV_[i][j+1]) / 1.0 * dt - ( 3.0/4.0-1.0) *       endPoints_[i][j] // j+1 t+1 is RHS
+                                                                                          - (-1.0/4.0-1.0) *   pjp0tp0              - (-1.0/4.0+1.0) * pjp1tp0  
+                                                                                          - (-3.0/4.0+0.0) *   old.endPoints_[i][j] - (-3.0/4.0+0.0) * old.endPoints_[i][j+1]
+                                                                                          - ( 1.0/4.0+0.0) * older.endPoints_[i][j] - ( 1.0/4.0+0.0) * older.endPoints_[i][j+1] ) / ( 3.0/4.0+1.0 );
+            } else {
+                endPoints_[i][j+1] = ( (endPointV_[i][j] + endPointV_[i][j+1]) / 1.0 * dt - ( 1.0-1.0) *       endPoints_[i][j] // j+1 t+1 is RHS
+                                                                                          - (-1.0-1.0) *   pjp0tp0              - (-1.0+1.0) *   pjp1tp0 ) / (1.0+1.0);
+            }
         }
     }    
     for ( int i = ni_-1; i > -1; i--){
@@ -152,7 +162,7 @@ void TipFilament::fixToWake( VortexLattice &vl ){
     }
     double den = 0.0, numx = 0.0, numy = 0.0, numz=0.0;
     double thisGamma = 0.0;
-    for(int i = 0; i < maxGammaI/2; i++){
+    for(int i = 0; i < maxGammaI/2.0; i++){
         thisGamma = 0.0;
         if ( i > 0 ) { thisGamma += vl.gammaJ()[i-1][maxj-2]; }
         if ( i < (maxi-1) ) { thisGamma -= vl.gammaJ()[i][maxj-2]; }
@@ -205,6 +215,10 @@ std::vector<std::vector<Vec3D>>& TipFilament::endPoints(){
 
 std::vector<std::vector<Vec3D>>& TipFilament::endPointVelocity(){
     return endPointV_;
+} 
+
+std::vector<std::vector<Vec3D>>& TipFilament::endPointVelocityOld(){
+    return endPointVold_;
 } 
 
 std::vector<std::vector<double>>& TipFilament::gamma(){
