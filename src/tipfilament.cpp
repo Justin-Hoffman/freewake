@@ -178,7 +178,7 @@ void TipFilament::fixToWake( VortexLattice &vl ){
         den = 1.0;
     };
     endPoints_[0][0] = Vec3D(numx/den, numy/den, numz/den);
-    gamma_[0][0] = nGamma*0.25;
+    gamma_[0][0] = nGamma;
     den = 0.0, numx = 0.0, numy = 0.0, numz=0.0;
     //printf("maxi of %i\n", maxi);
     //printf("maxGammaI of %i\n", maxGammaI);

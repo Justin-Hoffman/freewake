@@ -172,7 +172,7 @@ void LiftingSurface::updateLattice(){
 Vec3D LiftingSurface::calcInducedVelocity( Vec3D p ){
     Vec3D vInduced = horseshoeLattice_.calcInducedVelocity( p );
     if ( freeWake_ ){
-        vInduced += vortexLattice_.calcInducedVelocity( p, 1);
+        vInduced += vortexLattice_.calcInducedVelocity( p, 0);
     }
     if ( freeTipVortex_ ){
         vInduced += tipFilament_.calcInducedVelocity( p );
