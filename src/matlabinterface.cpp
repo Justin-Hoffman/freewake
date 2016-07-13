@@ -274,8 +274,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
                     mxSetFieldByNumber(plhs[0],iSurface,16, cfx[iSurface] );
                     mxSetFieldByNumber(plhs[0],iSurface,17, cfy[iSurface] );
                     mxSetFieldByNumber(plhs[0],iSurface,18, cfz[iSurface] );
-                    mxSetFieldByNumber(plhs[0],iSurface,19, cmz[iSurface] );
-                    mxSetFieldByNumber(plhs[0],iSurface,20, cmz[iSurface] );
+                    mxSetFieldByNumber(plhs[0],iSurface,19, cmx[iSurface] );
+                    mxSetFieldByNumber(plhs[0],iSurface,20, cmy[iSurface] );
                     mxSetFieldByNumber(plhs[0],iSurface,21, cmz[iSurface] );
                     mxSetFieldByNumber(plhs[0],iSurface,22, t[iSurface]);
                     mxSetFieldByNumber(plhs[0],iSurface,23, mxDuplicateArray(prhs[0]) );

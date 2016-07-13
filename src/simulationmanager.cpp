@@ -156,47 +156,10 @@ void SimulationManager::stepPCC(){
             tv.rc() = std::vector<std::vector<double> >(tvold.rc());
             vl.endPointVelocityOld() = std::vector<std::vector<Vec3D> > ( vlold.endPointVelocity() );
             tv.endPointVelocityOld() = std::vector<std::vector<Vec3D> > ( tvold.endPointVelocity() );
-            /*
-            for(int i = 0; i < vl.ni(); i++){
-                for( int j = 0; j < vl.nj(); j++){
-                    vl.endPointVelocity()[i][j] = (vl.endPointVelocity()[i][j] + vlold.endPointVelocity()[i][j] ) /2.0;
-                }
-            }
-            for(int i = 0; i < tv.ni(); i++){
-                for( int j = 0; j < tv.nj(); j++){
-                    tv.endPointVelocity()[i][j] = (tv.endPointVelocity()[i][j] + tvold.endPointVelocity()[i][j] ) /2.0;
-                }
-            }
-            */
         }
     }
-    //Apply explicit relaxation
     advectWakePCC();
     fillWakeBC();
-    
-    /*Apply explicit relaxation
-    double eps = 1.00;
-    for (int h = 0; h < (int) surfaces_.size(); h++){
-        VortexLattice &vl = surfaces_[h]->getVortexLattice();
-        VortexLattice &vlold = originalSurfaces[h].getVortexLattice();
-        TipFilament &tv = surfaces_[h]->getTipFilament();
-        TipFilament &tvold = originalSurfaces[h].getTipFilament();
-        if (surfaces_[h]->freeWake()){
-            for( int i = 0; i < vl.ni(); i++ ){
-                for( int j = 0; j < vl.nj(); j++ ){
-                    vl.endPoints()[i][j] = (eps) * vl.endPoints()[i][j] + (1.0-eps) * vlold.endPoints()[i][j];
-                    if ( j  < (vl.nj()-1) ) vl.gammaJ()[i][j] = (eps) * vl.gammaJ()[i][j] + (1.0-eps) * vlold.gammaJ()[i][j];
-                }
-            }
-            for(int i = 0; i < 2; i++){
-                for(int j = 0; j< tv.nj(); j++){
-                    tv.endPoints()[i][j] = (eps) * tv.endPoints()[i][j] + (1.0-eps) * tvold.endPoints()[i][j];
-                    if ( j  < (tv.nj()-1) ) tv.gamma()[i][j] = (eps) * tv.gamma()[i][j] + (1.0-eps) * tvold.gamma()[i][j];
-                }
-            }
-        }
-    }
-    */
     matchFirstWakePointsToSurface();
 }
  
@@ -429,7 +392,8 @@ void SimulationManager::integrateForceAndMoment(){
                 }//hj
                 Vec3D force;
                 if ( refSurf_.pgCorrection ){
-                    double beta = 1.0/sqrt(1.0 - (vInf+vInduced).magnitude()*(vInf+vInduced).magnitude()/(refSurf_.vMach * refSurf_.vMach));
+                    double localMach = fmin(0.9,(vInf+vInduced).magnitude()/refSurf_.vMach);
+                    double beta = 1.0/sqrt(1.0 - localMach*localMach);
                     force = (vInf+vInduced).cross( thisGamma )/beta;
                 } else {
                     force = (vInf+vInduced).cross( thisGamma );
