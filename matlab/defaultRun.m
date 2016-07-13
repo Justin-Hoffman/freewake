@@ -1,7 +1,7 @@
 function freewakeSetup = defaultRun()
     freewakeSetup.omega = 176; %Roughly mach 0.6 for a 7.5 ft span rotor (Caradonna Tung Rotor)
-    freewakeSetup.dt = 2*pi/freewakeSetup.omega/60;
-    freewakeSetup.nt = 20;
+    freewakeSetup.dt = 2*pi/freewakeSetup.omega/50;
+    freewakeSetup.nt = 500;
     freewakeSetup.globalLinearVelocity = [0, 0, 0];
     freewakeSetup.globalRotationAxis = [0, 0, 1];
     
