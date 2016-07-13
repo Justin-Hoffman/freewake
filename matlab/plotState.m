@@ -1,5 +1,5 @@
 function plotState(surfs)
-        
+        alpha = 0.3;
         nSurfs = length(surfs);
         cWake = {'r','b','g'};
         %ColorSet = varycolor(Nb*(N_span+1));
@@ -22,10 +22,14 @@ function plotState(surfs)
 %                     -surfs(n).ySurface(:,j),...
 %                     -surfs(n).zSurface(:,j),'-k')
 %            end
-            hSurface = surf(surfs(n).xSurface,-surfs(n).ySurface,-surfs(n).zSurface);
+            hSurface = surfl(surfs(n).xSurface,-surfs(n).ySurface,-surfs(n).zSurface);
+            material dull
             set(hSurface,'FaceColor',[.5 .5 .5],'FaceAlpha',0.9);
-            hSurface = surf(surfs(n).xWake,-surfs(n).yWake,-surfs(n).zWake);
-            set(hSurface,'FaceColor',cWake{n},'FaceAlpha',0.2);
+            hSurface = surfl(surfs(n).xWake,-surfs(n).yWake,-surfs(n).zWake);
+            set(hSurface,'FaceColor',cWake{n},'FaceAlpha',alpha);
+            material dull
+            camlight right
+            camlight(30,80)
            for i = 1:2
               plot3(surfs(n).xTipFilament(i,:),...
                     -surfs(n).yTipFilament(i,:),...
