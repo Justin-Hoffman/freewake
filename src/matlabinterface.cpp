@@ -1,5 +1,6 @@
 #include <cmath>
 #include <cstdlib>
+#include <string.h>
 #include "matlabinterface.h"
 
 extern void _main();
@@ -143,7 +144,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
         double time = 0;
         // mexprintf("Solve\n");
         while ( nStep < nt ){
-            sm.stepPCC();
+            switch ( inArgs.integrationScheme ) {
+                case IntegrationScheme::EULER : sm.step(); break;
+                case IntegrationScheme::RK2   : sm.stepRK2(); break;
+                case IntegrationScheme::PCC   : sm.stepPCC(); break;
+                case IntegrationScheme::PC2B  : sm.stepPC2B(); break;
+            }
             time += sm.dt();
                 for(int iSurface = 0; iSurface < nSurfaces; iSurface++){
                     LiftingSurface &l = sm.getSurface( iSurface );
@@ -154,7 +160,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
                     cmzp[nStep]  = sm.forcesAndMoments().bodyMomentCoeff.z;
                     tp[nStep ]  = time;
                 }
-            if (nStep % 2 == 0){
+            if (nStep % 5 == 0){
                 for(int iSurface = 0; iSurface < nSurfaces; iSurface++){
                     LiftingSurface &l = sm.getSurface( iSurface );
                     HorseshoeLattice &hl = l.getHorseshoeLattice();  
@@ -464,6 +470,23 @@ MatlabInterfaceStruct validateArgs( int nrhs, const mxArray *prhs[] ) {
     } else {
         inArgs.doPrandtlGlauert = (bool) *mxGetPr(val);
     }
+
+    val = mxGetField( prhs[0], 0, "integrationScheme");
+    if (val == 0){
+        mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: integrationScheme");
+    } else {
+        char* scheme = mxArrayToString(val);
+        if ( !strcmp( scheme, "EULER") ){
+            inArgs.integrationScheme = IntegrationScheme::EULER;
+        } else if ( !strcmp( scheme, "RK2") ) {
+            inArgs.integrationScheme = IntegrationScheme::RK2;
+        } else if ( !strcmp( scheme, "PCC") ) {
+            inArgs.integrationScheme = IntegrationScheme::PCC;
+        } else if ( !strcmp( scheme, "PC2B") ) {
+            inArgs.integrationScheme = IntegrationScheme::PC2B;
+        }
+    }
+
 
     return inArgs;
 }

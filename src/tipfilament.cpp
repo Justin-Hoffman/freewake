@@ -88,7 +88,7 @@ void TipFilament::advect( double dt ){
 void TipFilament::advectAndRotate( double dt, Vec3D axis, double omega ){
     for ( int i = ni_-1; i > -1; i--){
         for (int j = nj_-1; j > 0; j--){
-            endPoints_[i][j] = endPoints_[i][j-1].rotate(Vec3D(0.0, 0.0, 0.0), axis, omega*dt) + (endPointV_[i][j-1])/1.0*dt;
+            endPoints_[i][j] = endPoints_[i][j-1].rotate(Vec3D(0.0, 0.0, 0.0), axis, omega*dt) + (endPointV_[i][j-1] + endPointV_[i][j])/2.0*dt;
             if ( j < nj_-1 ){
                 gamma_[i][j] = gamma_[i][j-1];
                 rc_[i][j] = VortexCoreGrowth( rc_[i][j-1], dt );

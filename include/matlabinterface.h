@@ -16,6 +16,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]);
 
 // A structure containing all data from the mxArray passed in as the RHS from MATLAB
 struct MatlabInterfaceStruct {
+    IntegrationScheme integrationScheme;
+
     double omega;                     /*!< Global rotation rate */ 
     double dt; 
     int nt;

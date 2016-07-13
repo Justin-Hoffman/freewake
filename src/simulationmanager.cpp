@@ -69,6 +69,15 @@ Vec3D SimulationManager::getGlobalLinearVelocity(){
 
 void SimulationManager::step(){
     double dt = dt_;
+    solve();
+    calculateWakeVelocitiesLinearOnly();
+    advectWake();
+    fillWakeBC();
+    matchFirstWakePointsToSurface();
+}
+
+void SimulationManager::stepRK2(){
+    double dt = dt_;
     std::vector< LiftingSurface > originalSurfaces = std::vector< LiftingSurface >();
     for (int h = 0; h < (int) surfaces_.size(); h++){
         originalSurfaces.emplace_back( *surfaces_[h] );
@@ -98,7 +107,7 @@ void SimulationManager::step(){
             tv.rc() = std::vector<std::vector<double> >(tvold.rc());
         }
     }
-    double eps = 1.00;
+    double eps = 0.9;
     dt_ = dt;
     advectWake();
     fillWakeBC();

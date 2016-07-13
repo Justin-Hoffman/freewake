@@ -20,6 +20,7 @@ struct ForcesAndMoments { //Container forces and moments in body coordinates (X,
     ForcesAndMoments() : bodyForce(), bodyMoment(), bodyForceCoeff(), bodyMomentCoeff(), aeroForce(), aeroMoment(), aeroForceCoeff(), aeroMomentCoeff(){}
 };
 
+enum IntegrationScheme { EULER, RK2, PCC, PC2B };
 
 class SimulationManager {
     public:
@@ -44,6 +45,7 @@ class SimulationManager {
         void setReferenceVelocity( double );
         void setDt( double );
         void step();
+        void stepRK2();
         void stepPCC();
         void stepPC2B();
         void integrateForceAndMoment();
