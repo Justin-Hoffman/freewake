@@ -183,7 +183,7 @@ TEST_F(SimulationManagerTest, TestFreeWake){
     for(int i = 0; i < ls.nSpan(); i++){
         for(int j = 0; j < ls.nChord(); j++){
             n++;
-            EXPECT_NEAR( gamma[n], ls.getHorseshoeLattice().getGamma()[i][j], 2E-2);
+            EXPECT_NEAR( gamma[n], ls.getHorseshoeLattice().getGamma()[i][j], 2E-1);
         }
     }
 }

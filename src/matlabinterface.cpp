@@ -28,7 +28,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
             ls.setFreeTipVortex( inArgs.isFreeTipVortex );
             ls.setAspectRatio( inArgs.surfaceAR );
             ls.setPitch( inArgs.surfacePitch );
-            ls.setCoreRadius( 1E-3 );
+            ls.setCoreRadius( 1E-4 );
             ls.setTipDihedral( inArgs.surfaceTipDihedral );
             ls.setTipDihedralBreak( inArgs.surfaceTipDihedralBreak );
             ls.getHorseshoeLattice().spanwiseSpacing(PointSpacing::Cosine);

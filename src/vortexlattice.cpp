@@ -9,7 +9,7 @@ VortexLattice::VortexLattice() : ni_( 2 ), nj_( 2 ),
                                  gammaI_( 1, std::vector<double>( 2, 0.0  ) ) , 
                                  rcI_( 1, std::vector<double>( 2, 1.E-2  ) ) , 
                                  gammaJ_( 2, std::vector<double>( 1, 0.0  ) ) ,
-                                 rcJ_( 2, std::vector<double>( 1, 1.E-1 ) ) {
+                                 rcJ_( 2, std::vector<double>( 1, 1.E-2 ) ) {
  
 }
 
@@ -21,7 +21,7 @@ VortexLattice::VortexLattice( int ni, int nj ) :
                                  gammaI_( ni-1, std::vector<double>( nj, 0.0  ) ), 
                                  rcI_( ni-1, std::vector<double>( nj, 1.E-2  ) ), 
                                  gammaJ_( ni, std::vector<double>( nj-1, 0.0  ) ),
-                                 rcJ_( ni, std::vector<double>( nj-1, 1.E-1  ) ){
+                                 rcJ_( ni, std::vector<double>( nj-1, 1.E-2  ) ){
  
 }
 
