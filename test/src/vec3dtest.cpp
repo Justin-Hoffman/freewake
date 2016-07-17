@@ -15,7 +15,7 @@ class Vec3DTest: public ::testing::Test {
 	}
 
 	virtual void TearDown(){
-        delete vx, vy, vz;
+        delete vx; delete vy; delete vz;
 	}
 
 };

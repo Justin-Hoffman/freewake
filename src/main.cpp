@@ -10,8 +10,8 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-extern void printMatrix( char const* desc, int m, int n, double* a, int lda );
-extern void print_int_vector( char const* desc, int n, int* a );
+extern void printMatrix(char const *desc, int m, int n, double *a, int lda);
+extern void print_int_vector(char const *desc, int n, int *a);
 
 int main( int argc, char* argv[] ) {
     //Run Simulation

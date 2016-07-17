@@ -1,6 +1,8 @@
 #Compiler settings 
-CC = gcc 
-CPP = g++
+CC = clang 
+CPP = clang++
+#CC = gcc
+#CPP = g++
 
 PREFIX = x86_64-w64-mingw32
 WIN_CC = $(PREFIX)-$(CC)

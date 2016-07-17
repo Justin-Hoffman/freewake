@@ -68,7 +68,6 @@ Vec3D SimulationManager::getGlobalLinearVelocity(){
 }
 
 void SimulationManager::step(){
-    double dt = dt_;
     solve();
     calculateWakeVelocitiesLinearOnly();
     advectWake();
@@ -104,7 +103,7 @@ void SimulationManager::stepRK2(){
             vl.rcJ() = std::vector<std::vector< double > >(vlold.rcJ());
             tv.endPoints() = std::vector<std::vector<Vec3D> >(tvold.endPoints());
             tv.gamma() = std::vector<std::vector<double> >(tvold.gamma());
-            tv.rc() = std::vector<std::vector<double> >(tvold.rc());
+            tv.rc() = std::vector<std::vector<double>>(tvold.rc());
         }
     }
     double eps = 0.9;
@@ -361,7 +360,7 @@ void SimulationManager::fillLHS( double* a ){
 }
 
 double SimulationManager::netLiftDirect(){
-    double netLift;
+    double netLift = 0.0;
     for( int h = 0; h < (int) surfaces_.size(); h++ ){
         LiftingSurface* s = surfaces_[h];
         HorseshoeLattice& hl = s->getHorseshoeLattice();

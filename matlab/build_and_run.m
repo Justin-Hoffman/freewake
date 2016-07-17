@@ -4,7 +4,7 @@ mex -largeArrayDims ../src/matlabinterface.cpp -L../libs/ -I../include/ -v -lfre
 %mex -largeArrayDims -L../libs/ -I../include/ -v -lfreewake -llapack -llapacke ../src/matlabinterface.cpp
 
 inArgs = defaultRun();
-nWake = 5:5:5;
+nWake = 50:50:50;
 tipCant = 0:15:0;
 for i = 1:length(nWake)
     for j = 1:length(tipCant)
