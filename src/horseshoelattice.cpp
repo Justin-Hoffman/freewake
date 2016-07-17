@@ -7,8 +7,11 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-HorseshoeLattice::HorseshoeLattice() : rc_(1E-6), ni_( 1 ), nj_( 1 ), chordwiseSpacing_( PointSpacing::Linear ), spanwiseSpacing_(PointSpacing::Linear), 
-                                 hasTrailers_( false ), trailerVec_( 0.0, 0.0, 0.0 ), 
+HorseshoeLattice::HorseshoeLattice() : rc_(1E-6), rotationRate_(0.0), 
+                                 ni_( 1 ), nj_( 1 ), chordwiseSpacing_( PointSpacing::Linear ), spanwiseSpacing_(PointSpacing::Linear), 
+                                 hasTrailers_( false ), trailerVec_( 0.0, 0.0, 0.0 ),
+                                 rotationAxis_( 0.0, 0.0, 1.0), 
+                                 rotationCenter_( 0.0, 0.0, 0.0),
                                  endPoints( 2, std::vector<Vec3D>( 2, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  controlPoints( 1, std::vector<Vec3D>( 1, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  controlPointNormals( 1, std::vector<Vec3D>( 1, Vec3D(0.0, 0.0, 1.0) ) ), 
@@ -19,8 +22,11 @@ HorseshoeLattice::HorseshoeLattice() : rc_(1E-6), ni_( 1 ), nj_( 1 ), chordwiseS
 }
 
 HorseshoeLattice::HorseshoeLattice( int ni, int nj ) : 
-                                 rc_(1E-6), ni_( ni ), nj_( nj ), chordwiseSpacing_( PointSpacing::Linear ), spanwiseSpacing_(PointSpacing::Linear), 
+                                 rc_(1E-6), rotationRate_( 0.0 ),
+                                 ni_( ni ), nj_( nj ), chordwiseSpacing_( PointSpacing::Linear ), spanwiseSpacing_(PointSpacing::Linear), 
                                  hasTrailers_( false ), trailerVec_( 0.0, 0.0, 0.0 ),
+                                 rotationAxis_( 0.0, 0.0, 1.0), 
+                                 rotationCenter_( 0.0, 0.0, 0.0),
                                  endPoints( ni+1, std::vector<Vec3D>( nj+1, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  controlPoints( ni, std::vector<Vec3D>( nj, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  controlPointNormals( ni, std::vector<Vec3D>( nj, Vec3D(0.0, 0.0, 1.0) ) ), 
@@ -31,8 +37,11 @@ HorseshoeLattice::HorseshoeLattice( int ni, int nj ) :
 }
 
 HorseshoeLattice::HorseshoeLattice( const HorseshoeLattice &v ) : 
-                                 rc_(v.rc_),ni_( v.ni_ ), nj_( v.nj_ ), chordwiseSpacing_( v.chordwiseSpacing_ ), spanwiseSpacing_( v.spanwiseSpacing_ ), 
+                                 rc_(v.rc_), rotationRate_( 0.0 ),
+                                 ni_( v.ni_ ), nj_( v.nj_ ), chordwiseSpacing_( v.chordwiseSpacing_ ), spanwiseSpacing_( v.spanwiseSpacing_ ), 
                                  hasTrailers_( v.hasTrailers_ ),  trailerVec_(v.trailerVec_),
+                                 rotationAxis_( 0.0, 0.0, 1.0), 
+                                 rotationCenter_( 0.0, 0.0, 0.0),
                                  endPoints( v.endPoints ),
                                  controlPoints( v.controlPoints ),
                                  controlPointNormals( v.controlPointNormals ),
@@ -363,6 +372,11 @@ int HorseshoeLattice::nj(){
     return nj_;
 }
 
+Vec3D HorseshoeLattice::getApparentVelocity( int i, int j ){
+    return rotationAxis_.cross(controlPoints[i][j]-rotationCenter_)*rotationRate_;
+
+}
+
 double HorseshoeLattice::getRc(){
     return rc_;
 }
@@ -427,7 +441,31 @@ Vec3D HorseshoeLattice::trailerVec(){
 void HorseshoeLattice::setTrailerVec( Vec3D v ){
    trailerVec_ = v;
 }
+
+Vec3D HorseshoeLattice::getRotationAxis(){
+    return rotationAxis_;
+}
     
+void HorseshoeLattice::setRotationAxis( Vec3D v ){
+   rotationAxis_ = v;
+}
+    
+Vec3D HorseshoeLattice::getRotationCenter(){
+    return rotationCenter_;
+}
+    
+void HorseshoeLattice::setRotationCenter( Vec3D v ){
+    rotationCenter_ = v;
+}
+
+double HorseshoeLattice::getRotationRate(){
+    return rotationRate_;
+}
+
+void HorseshoeLattice::setRotationRate( double r ){
+    rotationRate_ = r;
+}
+
    
 std::pair<int, int> HorseshoeLattice::ijFromN( int n ){
     std::pair<int, int> ij = std::pair<int, int>();

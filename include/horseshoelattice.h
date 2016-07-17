@@ -42,8 +42,14 @@ class HorseshoeLattice : public VortexContainer{
         double dSpan(int i, int j);
         double dChord(int i);
         double getRc( );
+        Vec3D getRotationAxis();
+        Vec3D getRotationCenter();
+        double getRotationRate();
+
         Vec3D gammaVector(int i, int j);
         Vec3D gammaCenterPoint(int i, int j);
+        Vec3D getApparentVelocity(int i, int j);
+
        
         void centerControlPoints(); 
         void chordwiseSpacing( PointSpacing );
@@ -51,6 +57,9 @@ class HorseshoeLattice : public VortexContainer{
         void flipTip( double dihedralBreak, double dihedral);  
         void setHasTrailers( bool b );
         void setTrailerVec( Vec3D v );
+        void setRotationAxis( Vec3D v );
+        void setRotationCenter( Vec3D v );
+        void setRotationRate( double r );
         void snapToUnit();
         void snapToAspectTaper( double ar, double taper ); 
         void snapToAspectTaperSweep( double ar, double taper, double Sweep ); 
@@ -63,12 +72,17 @@ class HorseshoeLattice : public VortexContainer{
         
     private:
         double rc_;
+        double rotationRate_;
+
         int ni_;
         int nj_;
         PointSpacing chordwiseSpacing_;
         PointSpacing spanwiseSpacing_;
         bool hasTrailers_;
         Vec3D trailerVec_;
+        
+        Vec3D rotationAxis_;
+        Vec3D rotationCenter_;
 
 
         std::vector< std::vector<Vec3D> > endPoints;

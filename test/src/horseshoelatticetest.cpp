@@ -124,6 +124,27 @@ TEST_F(HorseshoeLatticeTest, TestControlPoints){
     }
 }
 
+TEST_F(HorseshoeLatticeTest, TestApparentVelocityCalculation){
+    vl->snapToUnit();
+    double ycp[4] =    {1.0/8.0, 3.0/8.0, 5.0/8.0, 7.0/8.0};
+    double xcp[3] =    {-3.0/12.0, -7.0/12.0, -11.0/12.0};
+    Vec3D rotationAxis = Vec3D( 0.0, 0.0, 1.0 );
+    double rotationRate = M_PI;
+    vl->setRotationAxis( rotationAxis );
+    vl->setRotationRate( rotationRate );
+    for (int i = 0; i < vl->ni(); i++){
+        for (int j = 0; j < vl->nj(); j++){
+           Vec3D thisApparentV = vl->getApparentVelocity(i, j);
+           double thisRadius = sqrt(ycp[i]*ycp[i] + xcp[j]*xcp[j]);
+           EXPECT_DOUBLE_EQ(thisRadius * rotationRate, thisApparentV.magnitude() );
+           EXPECT_DOUBLE_EQ(ycp[i] , vl->getControlPoints()[i][j].y);
+           EXPECT_DOUBLE_EQ(xcp[j] , vl->getControlPoints()[i][j].x);
+           EXPECT_DOUBLE_EQ(0.0    , vl->getControlPoints()[i][j].z);
+        }
+    }
+}
+
+
 TEST_F(HorseshoeLatticeTest, TestControlPointNormals){
     vl->snapToAspectTaper( 4.0/0.75, .5);
     for (int i = 0; i < vl->ni(); i++){
