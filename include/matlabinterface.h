@@ -39,6 +39,7 @@ struct MatlabInterfaceStruct {
 
     double surfaceAR;
     double surfacePitch;
+    double surfaceRotationRate;
     double surfaceTipDihedral;
     double surfaceTipDihedralBreak;
 

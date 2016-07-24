@@ -42,7 +42,7 @@ function plotState(surfs)
             
         figure(102); clf; hold all;
         for n = 1:nSurfs
-            plot(surfs(n).yCp,-surfs(n).zSpanwiseForce)
+            plot(surfs(n).yCp(:,1),-surfs(n).zSpanwiseForce)
             xlabel('Y');
             ylabel('Sectional Loading');
             grid on

@@ -25,7 +25,7 @@ SimulationManager::SimulationManager( const SimulationManager& s ) : needsSolve_
 }
 
 SimulationManager::~SimulationManager(){
-    for (int h = 0; h < oldSurfaces_.size(); h++){
+    for (std::size_t h = 0, max = oldSurfaces_.size(); h < max; h++){
         delete( oldSurfaces_[h] );
         delete( olderSurfaces_[h] );
     }
@@ -70,6 +70,7 @@ Vec3D SimulationManager::getGlobalLinearVelocity(){
 void SimulationManager::step(){
     solve();
     calculateWakeVelocitiesLinearOnly();
+    advanceSurfaces();
     advectWake();
     fillWakeBC();
     matchFirstWakePointsToSurface();
@@ -78,7 +79,7 @@ void SimulationManager::step(){
 void SimulationManager::stepRK2(){
     double dt = dt_;
     std::vector< LiftingSurface > originalSurfaces = std::vector< LiftingSurface >();
-    for (int h = 0; h < (int) surfaces_.size(); h++){
+    for (std::size_t h = 0, max = surfaces_.size(); h < max; h++){
         originalSurfaces.emplace_back( *surfaces_[h] );
     }
     dt_ = dt/2.0;
@@ -86,11 +87,19 @@ void SimulationManager::stepRK2(){
     //Do half time step for first part of RK2::
     solve();
     calculateWakeVelocitiesLinearOnly();
+    advanceSurfaces();
     advectWake();
     matchFirstWakePointsToSurface();
     calculateWakeVelocitiesLinearOnly();
     //Reset X,Y,Z,Gamma, but use new wake velocity
     for (int h = 0; h < (int) surfaces_.size(); h++){
+        HorseshoeLattice &hl = surfaces_[h]->getHorseshoeLattice();
+        HorseshoeLattice &hlold = originalSurfaces[h].getHorseshoeLattice();
+        if (hl.getRotationRate() != 0.0 ){
+            hl.getEndPoints() = std::vector<std::vector<Vec3D> >(hlold.getEndPoints());
+            hl.getControlPoints() = std::vector<std::vector<Vec3D> >(hlold.getControlPoints());
+            hl.getControlPointNormals() = std::vector<std::vector<Vec3D> >(hlold.getControlPointNormals());
+        }
         VortexLattice &vl = surfaces_[h]->getVortexLattice();
         VortexLattice &vlold = originalSurfaces[h].getVortexLattice();
         TipFilament &tv = surfaces_[h]->getTipFilament();
@@ -108,6 +117,7 @@ void SimulationManager::stepRK2(){
     }
     double eps = 0.9;
     dt_ = dt;
+    advanceSurfaces();
     advectWake();
     fillWakeBC();
     
@@ -144,11 +154,19 @@ void SimulationManager::stepPCC(){
     //Do time step to get velocities for PCC
     solve();
     calculateWakeVelocities();
+    advanceSurfaces();
     advectWakeEuler();
     matchFirstWakePointsToSurface();
     calculateWakeVelocities();
     //Reset X,Y,Z,Gamma, but use average wake velocity
     for (int h = 0; h < (int) surfaces_.size(); h++){
+        HorseshoeLattice &hl = surfaces_[h]->getHorseshoeLattice();
+        HorseshoeLattice &hlold = originalSurfaces[h].getHorseshoeLattice();
+        if (hl.getRotationRate() != 0.0 ){
+            hl.getEndPoints() = std::vector<std::vector<Vec3D> >(hlold.getEndPoints());
+            hl.getControlPoints() = std::vector<std::vector<Vec3D> >(hlold.getControlPoints());
+            hl.getControlPointNormals() = std::vector<std::vector<Vec3D> >(hlold.getControlPointNormals());
+        }
         VortexLattice &vl = surfaces_[h]->getVortexLattice();
         VortexLattice &vlold = originalSurfaces[h].getVortexLattice();
         TipFilament &tv = surfaces_[h]->getTipFilament();
@@ -166,6 +184,7 @@ void SimulationManager::stepPCC(){
             tv.endPointVelocityOld() = std::vector<std::vector<Vec3D> > ( tvold.endPointVelocity() );
         }
     }
+    advanceSurfaces();
     advectWakePCC();
     fillWakeBC();
     matchFirstWakePointsToSurface();
@@ -179,11 +198,19 @@ void SimulationManager::stepPC2B(){
     //Do time step to get velocities for PCC
     solve();
     calculateWakeVelocities();
+    advanceSurfaces();
     advectWakePC2B();
     matchFirstWakePointsToSurface();
     calculateWakeVelocities();
     //Reset X,Y,Z,Gamma, but use average wake velocity
     for (int h = 0; h < (int) surfaces_.size(); h++){
+        HorseshoeLattice &hl = surfaces_[h]->getHorseshoeLattice();
+        HorseshoeLattice &hlold = originalSurfaces[h].getHorseshoeLattice();
+        if (hl.getRotationRate() != 0.0 ){
+            hl.getEndPoints() = std::vector<std::vector<Vec3D> >(hlold.getEndPoints());
+            hl.getControlPoints() = std::vector<std::vector<Vec3D> >(hlold.getControlPoints());
+            hl.getControlPointNormals() = std::vector<std::vector<Vec3D> >(hlold.getControlPointNormals());
+        }
         VortexLattice &vl = surfaces_[h]->getVortexLattice();
         VortexLattice &vlold = originalSurfaces[h].getVortexLattice();
         TipFilament &tv = surfaces_[h]->getTipFilament();
@@ -209,6 +236,7 @@ void SimulationManager::stepPC2B(){
             }
         }
     }
+    advanceSurfaces();
     advectWakePC2B();
     fillWakeBC();
     //Apply explicit relaxation
@@ -306,16 +334,21 @@ void SimulationManager::fillRHS( double* b ){
                     //For every control point from every lifting surface 
                     int ni = hijToN(hi,ii,ji);
                     Vec3D cpi  = hli.getControlPoints()[ii][ji]; //Save the location of this control point
-                    Vec3D cpni  = hli.getControlPointNormals()[ii][ji]; //Save the location of this control point
+                    Vec3D cpni  = hli.getControlPointNormals()[ii][ji]; //Save the normal of this control point
                     Vec3D vInf = vInfinity( cpi );
                     b[ni] = -vInf.dot( cpni ); //Find the RHS (vInfinity dot control point normal)
-                    
+
+                    //Account for apparent velocity due to surface rotation
+                    if(hli.getRotationRate() != 0.0){
+                        b[ni] += hli.getApparentVelocity(ii,ji).dot( cpni );
+                    } 
+
                     //Iterate through all attached vortex latices
                     for( int hj = 0; hj < (int)surfaces_.size(); hj++ ){
                         LiftingSurface* sj = surfaces_[hj];
                         if ( sj->freeWake() ){
                             VortexLattice& vlj = sj->getVortexLattice();
-                            b[ni] -= vlj.calcInducedVelocity( cpi, 1 ).dot( cpni );
+                            b[ni] -= vlj.calcInducedVelocity( cpi ).dot( cpni );
                         }
                         if ( sj->freeTipVortex() ){
                             TipFilament& tf = sj->getTipFilament();
@@ -398,13 +431,17 @@ void SimulationManager::integrateForceAndMoment(){
                     //vInduced += hlj.calcInducedVelocity( thisGammaCenter );
                     vInduced += vIndH;
                 }//hj
+                Vec3D vApparent = Vec3D(0.0, 0.0, 0.0);
+                if (hl.getRotationRate() != 0.0 ){
+                    vApparent = hl.getApparentVelocity( thisGammaCenter );
+                }
                 Vec3D force;
                 if ( refSurf_.pgCorrection ){
-                    double localMach = fmin(0.9,(vInf+vInduced).magnitude()/refSurf_.vMach);
+                    double localMach = fmin(0.7,(vInf+vInduced-vApparent).magnitude()/refSurf_.vMach);
                     double beta = sqrt(1.0 - localMach*localMach);
-                    force = (vInf+vInduced).cross( thisGamma )/beta;
+                    force = (vInf+vInduced-vApparent).cross( thisGamma )/beta;
                 } else {
-                    force = (vInf+vInduced).cross( thisGamma );
+                    force = (vInf+vInduced-vApparent).cross( thisGamma );
                 }
                 netForce += force;
                 netMoment += force.cross(thisGammaCenter);
@@ -541,9 +578,9 @@ void SimulationManager::advectWakePCC(){
         LiftingSurface* s = surfaces_[h];
         if  ( s->freeWake() ){ //If surface is a free wake case we need to calculate wake velocity
             TipFilament& tf = s->getTipFilament();
-            tf.advectPCC( dt_, globalRotationAxis_, globalRotationRate_ );
+            tf.advectPCC( dt_  );
             VortexLattice& vl = s->getVortexLattice();
-            vl.advectPCC( dt_, globalRotationAxis_, globalRotationRate_ );
+            vl.advectPCC( dt_  );
             tf.fixToWake( vl );
         }
     }
@@ -555,12 +592,23 @@ void SimulationManager::advectWakePC2B(){
         LiftingSurface* s = surfaces_[h];
         if  ( s->freeWake() ){ //If surface is a free wake case we need to calculate wake velocity
             TipFilament& tf = s->getTipFilament();
-            tf.advectPC2B( dt_, globalRotationAxis_, globalRotationRate_, oldSurfaces_[h]->getTipFilament(), olderSurfaces_[h]->getTipFilament() );
+            tf.advectPC2B( dt_, oldSurfaces_[h]->getTipFilament(), olderSurfaces_[h]->getTipFilament() );
             VortexLattice& vl = s->getVortexLattice();
-            vl.advectPC2B( dt_, globalRotationAxis_, globalRotationRate_, oldSurfaces_[h]->getVortexLattice(), olderSurfaces_[h]->getVortexLattice() );
+            vl.advectPC2B( dt_, oldSurfaces_[h]->getVortexLattice(), olderSurfaces_[h]->getVortexLattice() );
             tf.fixToWake( vl );
         }
     }
+}
+
+void SimulationManager::advanceSurfaces(){
+    //For every surface
+    for( int h = 0; h < (int) surfaces_.size(); h++ ){
+        LiftingSurface* s = surfaces_[h];
+        HorseshoeLattice& hl = s->getHorseshoeLattice();
+        if (hl.getRotationRate() != 0.0){
+            hl.rotate( hl.getRotationCenter(), hl.getRotationAxis(), hl.getRotationRate()*dt_ );
+        }
+    }    
 }
 
 void SimulationManager::matchFirstWakePointsToSurface(){

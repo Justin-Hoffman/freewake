@@ -7,9 +7,9 @@ VortexLattice::VortexLattice() : ni_( 2 ), nj_( 2 ),
                                  endPointV_( 2, std::vector<Vec3D>( 2, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  endPointVold_( 2, std::vector<Vec3D>( 2, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  gammaI_( 1, std::vector<double>( 2, 0.0  ) ) , 
-                                 rcI_( 1, std::vector<double>( 2, 1.E-2  ) ) , 
+                                 rcI_( 1, std::vector<double>( 2, 1.E-4  ) ) , 
                                  gammaJ_( 2, std::vector<double>( 1, 0.0  ) ) ,
-                                 rcJ_( 2, std::vector<double>( 1, 1.E-1 ) ) {
+                                 rcJ_( 2, std::vector<double>( 1, 1.E-4 ) ) {
  
 }
 
@@ -19,9 +19,9 @@ VortexLattice::VortexLattice( int ni, int nj ) :
                                  endPointV_( ni, std::vector<Vec3D>( nj, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  endPointVold_( ni, std::vector<Vec3D>( nj, Vec3D(0.0, 0.0, 0.0) ) ), 
                                  gammaI_( ni-1, std::vector<double>( nj, 0.0  ) ), 
-                                 rcI_( ni-1, std::vector<double>( nj, 1.E-2  ) ), 
+                                 rcI_( ni-1, std::vector<double>( nj, 1.E-4  ) ), 
                                  gammaJ_( ni, std::vector<double>( nj-1, 0.0  ) ),
-                                 rcJ_( ni, std::vector<double>( nj-1, 1.E-1  ) ){
+                                 rcJ_( ni, std::vector<double>( nj-1, 1.E-4  ) ){
  
 }
 
@@ -62,13 +62,13 @@ Vec3D VortexLattice::calcInfluenceCoefficient( Vec3D p, int n ){
     return aOut;
 }
 
-Vec3D VortexLattice::calcInducedVelocity( Vec3D p, int jStart ){
+Vec3D VortexLattice::calcInducedVelocity( Vec3D p ){
     Vec3D r1, r2, aOut = Vec3D();
     double vx = 0.0, vy = 0.0, vz = 0.0;
     #pragma omp parallel for private( r1, r2) reduction(+:vx,vy,vz)
     for ( int i = 0; i < ni_; i++){
         Vec3D aTmp = Vec3D(0.0, 0.0, 0.0);//Hackery because I can't use openMP reduce on a class
-        for (int j = jStart; j < nj_; j++){
+        for (int j = 0; j < nj_; j++){
             if (i < ni_-1) {
                 //Contribution of spanwise (i) edge filaments
                 r1 = (endPoints_[i  ][j] - p);
@@ -123,7 +123,7 @@ void VortexLattice::advectAndRotate( double dt, Vec3D axis, double omega ){
     }    
 }
 
-void VortexLattice::advectPCC( double dt, Vec3D axis, double omega ){
+void VortexLattice::advectPCC( double dt ){
     for ( int i = ni_-1; i > -1; i--){
         Vec3D pjp1tp0 = Vec3D(endPoints_[i][0]), pjp0tp0 = Vec3D(endPoints_[i][0]); //Points at this time at 2 wake ages
         for (int j = 0; j < nj_-1; j++){
@@ -147,7 +147,7 @@ void VortexLattice::advectPCC( double dt, Vec3D axis, double omega ){
     }
 }
 
-void VortexLattice::advectPC2B( double dt, Vec3D axis, double omega, VortexLattice& old, VortexLattice& older ){
+void VortexLattice::advectPC2B( double dt, VortexLattice& old, VortexLattice& older ){
     for ( int i = ni_-1; i > -1; i--){
         Vec3D pjp1tp0 = Vec3D(endPoints_[i][0]), pjp0tp0 = Vec3D(endPoints_[i][0]); //Points at this time at 2 wake ages
         for (int j = 0; j < nj_-1; j++){

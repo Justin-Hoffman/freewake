@@ -32,7 +32,7 @@ class HorseshoeLattice : public VortexContainer{
         std::vector< double >& getNetGamma();
         
         virtual Vec3D calcInfluenceCoefficient( Vec3D p, int n);
-        virtual Vec3D calcInducedVelocity( Vec3D, int jStart = 0 );
+        virtual Vec3D calcInducedVelocity( Vec3D );
         
         void calcControlPointNormals(); 
         
@@ -49,6 +49,7 @@ class HorseshoeLattice : public VortexContainer{
         Vec3D gammaVector(int i, int j);
         Vec3D gammaCenterPoint(int i, int j);
         Vec3D getApparentVelocity(int i, int j);
+        Vec3D getApparentVelocity( Vec3D p );
 
        
         void centerControlPoints(); 

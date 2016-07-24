@@ -8,7 +8,7 @@ class VortexContainer {
         virtual ~VortexContainer(){};
  
         virtual Vec3D calcInfluenceCoefficient( Vec3D p, int n) = 0;
-        virtual Vec3D calcInducedVelocity( Vec3D, int jStart ) = 0;
+        virtual Vec3D calcInducedVelocity( Vec3D ) = 0;
 };
 
 #endif

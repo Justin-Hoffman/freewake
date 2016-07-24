@@ -28,7 +28,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
             ls.setFreeTipVortex( inArgs.isFreeTipVortex );
             ls.setAspectRatio( inArgs.surfaceAR );
             ls.setPitch( inArgs.surfacePitch );
-            ls.setCoreRadius( 1E-3 );
+            ls.setCoreRadius( 1E-4 );
             ls.setTipDihedral( inArgs.surfaceTipDihedral );
             ls.setTipDihedralBreak( inArgs.surfaceTipDihedralBreak );
             ls.getHorseshoeLattice().spanwiseSpacing(PointSpacing::Cosine);
@@ -37,11 +37,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
             ls.updateLattice( );
             ls.getHorseshoeLattice().translate( Vec3D(0.0, 0.75, 0.0) );
             ls.getHorseshoeLattice().rotate(  Vec3D(0.0,0.0,0.0), Vec3D(0.0, 0.0, -1.0), ( (double)  i ) * 2.0 * M_PI/((double) inArgs.nSurfaces) );
+            ls.getHorseshoeLattice().setRotationRate( inArgs.surfaceRotationRate);
             ls.getVortexLattice().fixToTrailingEdge( ls.getHorseshoeLattice() );
-            ls.getVortexLattice().initializeToHelix( Vec3D(0.0, 0.0, 1.0), (omega)*sm.dt(), -0.0 );
+            ls.getVortexLattice().initializeToHelix( Vec3D(0.0, 0.0, 1.0), (inArgs.surfaceRotationRate)*sm.dt(), -0.0 );
             ls.getVortexLattice().fixToTrailingEdge( ls.getHorseshoeLattice() );
             ls.getTipFilament().fixToWake( ls.getVortexLattice() );
-            ls.getTipFilament().initializeToHelix( Vec3D(0.0, 0.0, 1.0), (omega)*sm.dt(), -0.0 );
+            ls.getTipFilament().initializeToHelix( Vec3D(0.0, 0.0, 1.0), (inArgs.surfaceRotationRate)*sm.dt(), -0.0 );
             sm.addSurface(&ls);
         }
         //LiftingSurface ls2 = LiftingSurface(ls);
@@ -160,7 +161,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
                     cmzp[nStep]  = sm.forcesAndMoments().bodyMomentCoeff.z;
                     tp[nStep ]  = time;
                 }
-            if (nStep % 5 == 0){
+            if (nStep % 1 == 0){
                 for(int iSurface = 0; iSurface < nSurfaces; iSurface++){
                     LiftingSurface &l = sm.getSurface( iSurface );
                     HorseshoeLattice &hl = l.getHorseshoeLattice();  
@@ -427,6 +428,13 @@ MatlabInterfaceStruct validateArgs( int nrhs, const mxArray *prhs[] ) {
         mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: surfacePitch");
     } else {
         inArgs.surfacePitch = *mxGetPr(val);
+    }
+    
+    val = mxGetField( prhs[0], 0, "surfaceRotationRate");
+    if (val == 0){
+        mexErrMsgIdAndTxt("Freewake:ErrorReadingField", "The following field is missing or incorrectly formatted: surfaceRotationRate");
+    } else {
+        inArgs.surfaceRotationRate = *mxGetPr(val);
     }
 
     val = mxGetField( prhs[0], 0, "surfaceTipDihedral");

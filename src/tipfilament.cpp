@@ -51,13 +51,13 @@ Vec3D TipFilament::calcInfluenceCoefficient( Vec3D p, int n ){
     return aOut;
 }
 
-Vec3D TipFilament::calcInducedVelocity( Vec3D p, int jStart ){
+Vec3D TipFilament::calcInducedVelocity( Vec3D p ){
     Vec3D r1, r2, aOut = Vec3D();
     double vx = 0.0, vy = 0.0, vz = 0.0;
     #pragma omp parallel for private( r1, r2) reduction(+:vx,vy,vz)
     for ( int i = 0; i < ni_; i++){
         Vec3D aTmp = Vec3D(0.0, 0.0, 0.0);//Hackery because I can't use openMP reduce on a class
-        for (int j = jStart; j < nj_; j++){
+        for (int j = 0; j < nj_; j++){
             if (j < nj_-1) {
                 //Contribution of chordwise (j) edge filaments
                 r1 = (endPoints_[i][j  ] - p);
@@ -97,7 +97,7 @@ void TipFilament::advectAndRotate( double dt, Vec3D axis, double omega ){
     }    
 }
 
-void TipFilament::advectPCC( double dt, Vec3D axis, double omega ){
+void TipFilament::advectPCC( double dt ){
     for ( int i = ni_-1; i > -1; i--){
         Vec3D pjp1tp0 = Vec3D(endPoints_[i][0]), pjp0tp0 = Vec3D(endPoints_[i][0]); //Points at this time at 2 wake ages
         for (int j = 0; j < nj_-1; j++){
@@ -119,7 +119,7 @@ void TipFilament::advectPCC( double dt, Vec3D axis, double omega ){
     }    
 }
 
-void TipFilament::advectPC2B( double dt, Vec3D axis, double omega, TipFilament& old, TipFilament& older ){
+void TipFilament::advectPC2B( double dt, TipFilament& old, TipFilament& older ){
     for ( int i = ni_-1; i > -1; i--){
         Vec3D pjp1tp0 = Vec3D(endPoints_[i][0]), pjp0tp0 = Vec3D(endPoints_[i][0]); //Points at this time at 2 wake ages
         for (int j = 0; j < nj_-1; j++){
@@ -178,7 +178,7 @@ void TipFilament::fixToWake( VortexLattice &vl ){
         den = 1.0;
     };
     endPoints_[0][0] = Vec3D(numx/den, numy/den, numz/den);
-    gamma_[0][0] = nGamma*0.25;
+    gamma_[0][0] = nGamma;
     den = 0.0, numx = 0.0, numy = 0.0, numz=0.0;
     //printf("maxi of %i\n", maxi);
     //printf("maxGammaI of %i\n", maxGammaI);
