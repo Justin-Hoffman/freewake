@@ -348,7 +348,7 @@ void SimulationManager::fillRHS( double* b ){
                         LiftingSurface* sj = surfaces_[hj];
                         if ( sj->freeWake() ){
                             VortexLattice& vlj = sj->getVortexLattice();
-                            b[ni] -= vlj.calcInducedVelocity( cpi ).dot( cpni );
+                            b[ni] -= vlj.calcInducedVelocity( cpi, 1 ).dot( cpni );
                         }
                         if ( sj->freeTipVortex() ){
                             TipFilament& tf = sj->getTipFilament();

@@ -36,6 +36,7 @@ class VortexLattice : public VortexContainer{
         
         virtual Vec3D calcInfluenceCoefficient( Vec3D p, int n);
         virtual Vec3D calcInducedVelocity( Vec3D );
+        Vec3D calcInducedVelocity( Vec3D, int );
         std::pair<int, int> ijFromN( int n );
         
         

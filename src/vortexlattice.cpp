@@ -63,12 +63,16 @@ Vec3D VortexLattice::calcInfluenceCoefficient( Vec3D p, int n ){
 }
 
 Vec3D VortexLattice::calcInducedVelocity( Vec3D p ){
+    return calcInducedVelocity( p , 0 );
+}
+
+Vec3D VortexLattice::calcInducedVelocity( Vec3D p, int jStart ){
     Vec3D r1, r2, aOut = Vec3D();
     double vx = 0.0, vy = 0.0, vz = 0.0;
     #pragma omp parallel for private( r1, r2) reduction(+:vx,vy,vz)
     for ( int i = 0; i < ni_; i++){
         Vec3D aTmp = Vec3D(0.0, 0.0, 0.0);//Hackery because I can't use openMP reduce on a class
-        for (int j = 0; j < nj_; j++){
+        for (int j = jStart; j < nj_; j++){
             if (i < ni_-1) {
                 //Contribution of spanwise (i) edge filaments
                 r1 = (endPoints_[i  ][j] - p);

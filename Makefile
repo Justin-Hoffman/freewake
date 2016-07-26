@@ -1,8 +1,8 @@
 #Compiler settings 
-CC = clang 
-CPP = clang++
-#CC = gcc
-#CPP = g++
+#CC = clang 
+#CPP = clang++
+CC = gcc
+CPP = g++
 
 PREFIX = x86_64-w64-mingw32
 WIN_CC = $(PREFIX)-$(CC)
@@ -15,8 +15,8 @@ WIN_CPP = $(PREFIX)-$(CPP)
 #CPP = icpc
 # Compile-time flags 
 #CFLAGS = -Wall -Weffc++ -fPIC -std=c++11 -mtune=core-avx2 -msse4.2 -mavx2 -mpclmul -march=native -O3 -fprofile-use
-CFLAGS = -Wall -Wextra -Weffc++ -fPIC -std=c++11 -O3 -fopenmp=libgomp
-CPPFLAGS = -std=c++11 -L./ -L./libs/ -lgcov -llapack -llapacke
+CFLAGS = -Wall -Wextra -Weffc++ -fPIC -std=c++11 -O3 -fopenmp
+CPPFLAGS = -std=c++11 -L./ -L./libs/ -lgcov -llapack -llapacke -lgomp
 #CPPFLAGS = -std=c++11 -L ./ -lpthread
 INC = -I ./include -I ./src 
 LDFLAGS =  -shared
