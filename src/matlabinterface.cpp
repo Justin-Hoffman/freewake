@@ -28,7 +28,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
             ls.setFreeTipVortex( inArgs.isFreeTipVortex );
             ls.setAspectRatio( inArgs.surfaceAR );
             ls.setPitch( inArgs.surfacePitch );
-            ls.setCoreRadius( 1E-4 );
+            ls.setCoreRadius( 1E-3 );
             ls.setTipDihedral( inArgs.surfaceTipDihedral );
             ls.setTipDihedralBreak( inArgs.surfaceTipDihedralBreak );
             ls.getHorseshoeLattice().spanwiseSpacing(PointSpacing::Cosine);
@@ -42,7 +42,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
             ls.getVortexLattice().initializeToHelix( Vec3D(0.0, 0.0, 1.0), (inArgs.surfaceRotationRate)*sm.dt(), -0.0 );
             ls.getVortexLattice().fixToTrailingEdge( ls.getHorseshoeLattice() );
             ls.getTipFilament().fixToWake( ls.getVortexLattice() );
-            ls.getTipFilament().initializeToHelix( Vec3D(0.0, 0.0, 1.0), (inArgs.surfaceRotationRate)*sm.dt(), -0.0 );
+            ls.getTipFilament().initializeToHelix( Vec3D(0.0, 0.0, 1.0), fmax(inArgs.surfaceRotationRate, omega)*sm.dt(), -0.0 );
             sm.addSurface(&ls);
         }
         //LiftingSurface ls2 = LiftingSurface(ls);

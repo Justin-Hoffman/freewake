@@ -437,7 +437,7 @@ void SimulationManager::integrateForceAndMoment(){
                 }
                 Vec3D force;
                 if ( refSurf_.pgCorrection ){
-                    double localMach = fmin(0.7,(vInf+vInduced-vApparent).magnitude()/refSurf_.vMach);
+                    double localMach = fmin(0.6,(vInf+vInduced-vApparent).magnitude()/refSurf_.vMach);
                     double beta = sqrt(1.0 - localMach*localMach);
                     force = (vInf+vInduced-vApparent).cross( thisGamma )/beta;
                 } else {

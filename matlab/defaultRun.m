@@ -1,9 +1,9 @@
 function freewakeSetup = defaultRun()
     omega = 176;
     freewakeSetup.integrationScheme = 'PCC';
-    freewakeSetup.omega = 0.0; %Roughly mach 0.6 for a 7.5 ft span rotor (Caradonna Tung Rotor)
+    freewakeSetup.omega = omega; %Roughly mach 0.6 for a 7.5 ft span rotor (Caradonna Tung Rotor)
     freewakeSetup.dt = 2*pi/omega/50;
-    freewakeSetup.nt = 150;
+    freewakeSetup.nt = 1150;
     freewakeSetup.globalLinearVelocity = [0, 0, 0];
     freewakeSetup.globalRotationAxis = [0, 0, 1];
     
@@ -21,7 +21,7 @@ function freewakeSetup = defaultRun()
     
     freewakeSetup.surfaceAR = 5.25;
     freewakeSetup.surfacePitch = 5.0*pi/180;
-    freewakeSetup.surfaceRotationRate = omega;
+    freewakeSetup.surfaceRotationRate = 0.0;
     freewakeSetup.surfaceTipDihedral = 15*pi/180;
     freewakeSetup.surfaceTipDihedralBreak = 0.90*5.25/6.0;
     
